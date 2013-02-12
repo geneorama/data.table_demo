@@ -1,0 +1,188 @@
+
+
+# Data table examples using public data
+
+By Gene Leynes
+Chicago Data Science
+
+## Introduction
+
+This code was used to demonstrate the features of the data.table package at the R User Group meetup held in Chicago on February 7th, 2013.
+
+The data and project related to this exmaple comes from another meetup and code project.  I attended that meetup, and put together some simple visualizations for inspiration.  These visualizations were intended to be used as talking points for the project.  I repurposed this data to provide some `data.table` examples.
+
+Meetup group: http://www.meetup.com/The-Chicago-Data-Visualization-Group/events/97690642/
+Github project related to meetup: https://github.com/sc3/26thandcalifornia
+My related project: https://github.com/geneorama/26_and_California
+
+Exmples complied using `knitr`:
+Original meetup example: http://chicagodatascience.com/public/26th_and_California_example_visualizations.html
+This example: 
+
+
+## INITIALIZE
+```{r}
+# source('00 Initialize.R')
+rm(list=ls())
+library(data.table)
+library(ggplot2)
+source("functions/ExtractIsoTime.R")
+source("functions/wtf.R")
+source("functions/NAsummary.R")
+```
+
+## READ CSV
+
+This csv contains raw data collected from the Cook Count Sherrif's website.  It was downloaded using a web scraping utility maintained here: https://github.com/sc3/cookcountyjail
+
+
+```{r}
+rawdat = read.table(
+	file = 'Database 2013-01-21 (8zQ4cW7T).csv', 
+	sep=',', quote='"', flush=FALSE, 
+	header=TRUE, nrows=-1, fill=FALSE, 
+	stringsAsFactors=FALSE,
+	na.strings=c('None', ''))
+
+str(rawdat)
+dat = as.data.table(rawdat)
+str(dat)
+```
+
+## Convert booking and discharge dates to date / time objects
+
+This relies on a simple function I wrote called `ExtractIsoTime` (which is in the functions folder).   The thing to notice here is that when you create new columns using `data.table` you use `:=` to denote assignment.
+
+```{r}
+## EXAMPLE FORMAT: 2012-12-30T20:57:19.616186
+dat[ , booking_date := ExtractIsoTime(dat$booking_date)]
+dat[ , discharge_date_earliest := ExtractIsoTime(dat$discharge_date_earliest)]
+```
+
+
+# Examples with data.table
+
+```{r}
+
+## Not directly related to data.table, but I like to see how many unique
+## and how many missing values each column has.
+
+NAsummary(dat)
+
+
+## Summary by bail amount the old way:
+## (Don't forget the useNA argument!!)
+table(dat$bail_amount)
+table(dat$bail_amount, useNA='ifany') # almost forgot
+
+## Summary by bail amount Data Table
+dat[ , .N, by = bail_amount]
+dat[ , .N, keyby = bail_amount]
+
+## Summary by race
+dat[ , .N, by=race]
+
+#############################################
+## SUBSETTING:
+#############################################
+
+## WRONG WAY:
+dat[ , 3]
+dat[ , 'race']
+
+## RIGHT WAY:
+dat[1:10 , race] 
+dat[1:10 , 3, with = F]
+
+
+## Indexing works differently 
+dat[1]
+
+## DF:
+df = as.data.frame(dat)
+# df[1]
+df[1,]
+
+
+
+#############################################
+## AGGREGATING:
+#############################################
+
+## Grouping is simple, but...
+dat[ , mean(age_at_booking), by=race]
+dat[ , age_at_booking, by=race]
+dat[ 
+	i = TRUE, 
+	j = list(
+		mean = mean(age_at_booking),
+		sd = sd(age_at_booking)
+		), 
+	by = race]
+
+## Sometimes things happen that you may not expect
+## It's good, but possibly a surprise
+dat[ 
+	i = TRUE, 
+	j = list(
+		mean = mean(age_at_booking),
+		sd = sd(age_at_booking),
+		age_at_booking
+		), 
+	by = race]
+```
+
+# Complex query example
+
+```{r}
+NAsummary(dat)
+
+mysummary = dat[
+	i = !is.na(charges) &
+		!is.na(booking_date) &
+		!is.na(bail_amount),
+	j = list(
+		count = .N,
+		coverage = diff(range(booking_date)),
+		bailave = mean(bail_amount),
+		bailsd = sd(bail_amount),
+		bailmin = min(bail_amount),
+		bailmax = max(bail_amount)
+		),
+	by = list(race,gender,age_at_booking)
+	]
+mysummary
+# wtf(mysummary)
+```
+
+
+# J and CJ
+
+```{r}
+
+dat[ , .N, by=race]
+
+setkey(dat, "race")
+dat['W']
+dat[J('W')]
+dat[J(c('W', 'WH'))]
+
+setkeyv(dat, c("race", "gender"))
+dat[c('W', 'WH')]
+dat[c('W', 'M')]
+dat[data.table('WH', 'M')]
+
+dat[J('WH', 'M')]
+dat[CJ('WH', 'M')]
+
+dat[J(c('W', 'WH'))]
+dat[CJ('WH', 'M')]
+
+dat[CJ(c('WH', 'W'))]
+dat[CJ(c('WH', 'W'))]
+
+```
+
+
+
+
