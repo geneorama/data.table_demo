@@ -7,9 +7,9 @@ This code was used to demonstrate the features of the data.table package at the 
 
 The data and project related to this exmaple comes from another meetup and code project.  I attended that meetup, and put together some simple visualizations for inspiration.  These visualizations were intended to be used as talking points for the project.  I repurposed this data to provide some `data.table` examples.
 
-Meetup group: http://www.meetup.com/The-Chicago-Data-Visualization-Group/events/97690642/
-Github project related to meetup: https://github.com/sc3/26thandcalifornia
-My project related to that meetup: https://github.com/geneorama/26_and_California
+Meetup group: http://www.meetup.com/The-Chicago-Data-Visualization-Group/events/97690642/ <br>
+Github project related to meetup: https://github.com/sc3/26thandcalifornia <br>
+My project related to that meetup: https://github.com/geneorama/26_and_California <br>
 
 
 ### This project's exmples complied to HTML using `knitr`:
