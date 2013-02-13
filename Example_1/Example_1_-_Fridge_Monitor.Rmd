@@ -6,9 +6,9 @@
 
 ## Pictures of the device (for fun):
 
-<img src="resources/2013-01-28 02.46.11 (sm).jpg" align=middle height=150 width =235 />
-<img src="resources/2013-01-28 02.46.45 (sm).jpg" align=middle height=150 width =235 />
-<img src="resources/2013-01-28 02.46.54 (sm).jpg" align=middle height=150 width =235 />
+<img src="../resources/2013-01-28 02.46.11 (sm).jpg" align=middle height=150 width =235 />
+<img src="../resources/2013-01-28 02.46.45 (sm).jpg" align=middle height=150 width =235 />
+<img src="../resources/2013-01-28 02.46.54 (sm).jpg" align=middle height=150 width =235 />
 
 ## Introduction
 
@@ -37,9 +37,12 @@ library(data.table)
 ### LIST AVAILABLE CSV FILES
 
 ```{r}
+## The following line is needed to compile to HTML, please ignore
+if (basename(getwd()) != "data.table_demo") {setwd("..")}
+
 ## LIST FILES
 csvfiles = list.files(
-	path = 'data logger results/', 
+	path = 'data/data logger results/', 
 	full.names=TRUE,
 	pattern = "[Cc][Ss][Vv]")
 csvfiles
@@ -50,6 +53,9 @@ csvfiles
 Notice that all the files have different sizes
 
 ```{r}
+## The following line is needed to compile to HTML, please ignore
+if (basename(getwd()) != "data.table_demo") {setwd("..")}
+
 dat = lapply(csvfiles, read.csv)
 str(dat, 1)
 ## ADD FILE NAME

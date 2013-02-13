@@ -11,19 +11,22 @@ This code was used to demonstrate the features of the data.table package at the 
 
 The data and project related to this exmaple comes from another meetup and code project.  I attended that meetup, and put together some simple visualizations for inspiration.  These visualizations were intended to be used as talking points for the project.  I repurposed this data to provide some `data.table` examples.
 
-Meetup group: http://www.meetup.com/The-Chicago-Data-Visualization-Group/events/97690642/
-Github project related to meetup: https://github.com/sc3/26thandcalifornia
-My related project: https://github.com/geneorama/26_and_California
+Meetup group: http://www.meetup.com/The-Chicago-Data-Visualization-Group/events/97690642/ <br>
+Github project related to meetup: https://github.com/sc3/26thandcalifornia <br>
+My related project: https://github.com/geneorama/26_and_California <br>
 
-Exmples complied using `knitr`:
-Original meetup example: http://chicagodatascience.com/public/26th_and_California_example_visualizations.html
-This example: 
+Exmples complied using `knitr`: <br>
+Original meetup example: http://chicagodatascience.com/public/26th_and_California_example_visualizations.html <br>
 
 
 ## INITIALIZE
 
 ```r
-# source('00 Initialize.R')
+## The following line is needed to compile to HTML, please ignore
+if (basename(getwd()) != "data.table_demo") {
+    setwd("..")
+}
+
 rm(list = ls())
 library(data.table)
 library(ggplot2)
@@ -40,7 +43,12 @@ This csv contains raw data collected from the Cook Count Sherrif's website.  It 
 
 
 ```r
-rawdat = read.table(file = "Database 2013-01-21 (8zQ4cW7T).csv", sep = ",", 
+## The following line is needed to compile to HTML, please ignore
+if (basename(getwd()) != "data.table_demo") {
+    setwd("..")
+}
+
+rawdat = read.table(file = "data/Database 2013-01-21 (8zQ4cW7T).csv", sep = ",", 
     quote = "\"", flush = FALSE, header = TRUE, nrows = -1, fill = FALSE, stringsAsFactors = FALSE, 
     na.strings = c("None", ""))
 
@@ -178,7 +186,7 @@ dat[, `:=`(discharge_date_earliest, ExtractIsoTime(dat$discharge_date_earliest))
 
 
 
-# Examples with data.table
+## Examples of grouping with data.table
 
 
 ```r
@@ -338,10 +346,14 @@ dat[, .N, by = race]
 ## 9:   IN    13
 ```
 
+
+
+## Examples of subsetting with data.table
+
+This is probably the most confusing thing at first
+
+
 ```r
-
-############################################# SUBSETTING:
-
 ## WRONG WAY:
 dat[, 3]
 ```
@@ -421,11 +433,17 @@ df[1, ]
 
 ```r
 
+```
 
 
-############################################# AGGREGATING:
+## Examples of grouping and aggregating with data.table
 
-## Grouping is simple, but...
+This is very fast, and very useful for generating any kind of summary statistics.
+
+
+```r
+
+## Grouping is simple
 dat[, mean(age_at_booking), by = race]
 ```
 
@@ -479,10 +497,15 @@ dat[i = TRUE, j = list(mean = mean(age_at_booking), sd = sd(age_at_booking)),
 ## 9:   IN 27.00 10.25
 ```
 
-```r
 
-## Sometimes things happen that you may not expect It's good, but possibly
-## a surprise
+## Examples of grouping and aggregating with data.table
+
+But look at what happens here!
+
+Sometimes things happen that you may not expect. It's good, but possibly a surprise. By including `age_at_booking` without any aggregating function, it automatically expands the data.table result
+
+
+```r
 dat[i = TRUE, j = list(mean = mean(age_at_booking), sd = sd(age_at_booking), 
     age_at_booking), by = race]
 ```
@@ -503,34 +526,24 @@ dat[i = TRUE, j = list(mean = mean(age_at_booking), sd = sd(age_at_booking),
 ```
 
 
-# Complex query example
+### Complex query example
 
 
 ```r
-NAsummary(dat)
-```
-
-```
-##                         col Count   nNA    rNA nUnique rUnique
-## charges_citation          1 19207   315 0.0164    1435  0.0747
-## race                      2 19207     0 0.0000       9  0.0004
-## age_at_booking            3 19207     0 0.0000      67  0.0034
-## gender                    4 19207     0 0.0000       2  0.0001
-## booking_date              5 19207   151 0.0078    4160  0.2165
-## jail_id                   6 19207     0 0.0000   19207  1.0000
-## bail_status               7 19207 10318 0.5371       5  0.0002
-## housing_location          8 19207     5 0.0002    6115  0.3183
-## charges                   9 19207  3052 0.1589    1075  0.0559
-## bail_amount              10 19207  6415 0.3339     119  0.0061
-## discharge_date_earliest  11 19207 10627 0.5532    8581  0.4467
-```
-
-```r
-
-mysummary = dat[i = !is.na(charges) & !is.na(booking_date) & !is.na(bail_amount), 
-    j = list(count = .N, coverage = diff(range(booking_date)), bailave = mean(bail_amount), 
-        bailsd = sd(bail_amount), bailmin = min(bail_amount), bailmax = max(bail_amount)), 
-    by = list(race, gender, age_at_booking)]
+mysummary = dat[
+	i = !is.na(charges) &
+		!is.na(booking_date) &
+		!is.na(bail_amount),
+	j = list(
+		count = .N,
+		coverage = diff(range(booking_date)),
+		bailave = mean(bail_amount),
+		bailsd = sd(bail_amount),
+		bailmin = min(bail_amount),
+		bailmax = max(bail_amount)
+		),
+	by = list(race,gender,age_at_booking)
+	]
 mysummary
 ```
 
@@ -562,17 +575,37 @@ mysummary
 ```
 
 ```r
+
+## Uncomment to open summary as csv file, in Excel probably
 # wtf(mysummary)
+```
+
+
+***
+<br>
+<br>
+## NOTE: FOR THE REST OF THE EXAMPLES I'M GOING TO USE FEWER COLUMNS, JUST BECAUSE IT GETS VERY VERBOSE TO PRINT EVERYTHING
+<br>
+<br>
+
+```r
+datSmall = dat[, list(race, gender, charges_citation, housing_location)]
 ```
 
 
 
 # J and CJ
 
+Here are some examples of how to use (and not use) the Join (J) and Cross Join (CJ)
+
+Personally, I rarely used these functions at first.  I found it easier to give up some performance for simplicity. 
+
+
 
 ```r
 
-dat[, .N, by = race]
+## Count of observations by race
+datSmall[, .N, by = race]
 ```
 
 ```
@@ -590,973 +623,343 @@ dat[, .N, by = race]
 
 ```r
 
-setkey(dat, "race")
-dat["W"]
+## Set the key to be 'race'', and do some joins
+setkey(datSmall, "race")
+
+## Simple inner Join, new syntax (and what I normally use)
+datSmall["W"]
 ```
 
 ```
-##     race               charges_citation age_at_booking gender
-##  1:    W 720 ILCS 5 12-3.4(a)(1) [16128             34      M
-##  2:    W    625 ILCS 5 6-303(a) [13526]             34      M
-##  3:    W   625 ILCS 5 11-501(a) [14041]             34      M
-##  4:    W    625 ILCS 5 6-303(a) [13526]             33      M
-##  5:    W 720 ILCS 5 12-13(a)(3) [995700             39      M
-##  6:    W                            000             26      M
-##  7:    W     720 ILCS 5 12-3.2 [930200]             25      M
-##  8:    W 720 ILCS 570 401(a)(2)(D) [509             35      M
-##  9:    W 720 ILCS 5 12-3.05(d)(4) [1610             20      M
-## 10:    W 720 ILCS 5 12-3.2(a)(1) [10416             43      M
-## 11:    W 720 ILCS 570 401(c)(1) [13009]             21      M
-## 12:    W    720 ILCS 5 16A-3(a) [15599]             23      M
-## 13:    W  720 ILCS 570 402(c) [5101110]             42      M
-## 14:    W                            000             19      M
-## 15:    W    720 ILCS 5 12-1(a) [920000]             33      M
-## 16:    W  720 ILCS 5 12-3(a)(2) [10530]             25      M
-## 17:    W  625 ILCS 5 6-303(d) [5883000]             33      M
-## 18:    W  720 ILCS 5 16A-3(a) [1060000]             20      M
-## 19:    W       720 ILCS 5 12-3 [930000]             19      M
-## 20:    W  720 ILCS 570 402(c) [5101110]             53      M
-## 21:    W   720 ILCS 5 16-3(a) [1025000]             27      F
-## 22:    W   720 ILCS 5 19-1(a) [1110000]             21      M
-## 23:    W 720 ILCS 5 12-3.2(a)(1) [10416             36      M
-## 24:    W 720 ILCS 5 12-3.2(a)(2) [10418             26      M
-## 25:    W   625 ILCS 5 11-501(a) [14039]             24      F
-## 26:    W  720 ILCS 570 402(c) [5101110]             43      M
-## 27:    W   625 ILCS 5 11-501(a) [12809]             38      M
-## 28:    W  720 ILCS 570 402(c) [5101110]             22      M
-## 29:    W 625 ILCS 5 11-501(a)(2) [11309             23      M
-## 30:    W             720 ILCS 5/19-1(a)             19      M
-## 31:    W                        UNKNOWN             36      M
-## 32:    W            625 ILCS 5/6-303(a)             46      M
-## 33:    W           625 ILCS 5/11-501(a)             25      M
-## 34:    W             720 ILCS 5/19-1(a)             19      M
-## 35:    W           625 ILCS 5/11-501(a)             21      F
-## 36:    W           720 ILCS 5/9-1(a)(1)             23      M
-## 37:    W                38-24-3.1(a)(6)             20      M
-## 38:    W           625 ILCS 5/11-501(a)             44      M
-## 39:    W               720 ILCS 570/402             18      M
-## 40:    W              720 ILCS 550/5(g)             57      M
-## 41:    W       720 ILCS 5/12-14.1(a)(1)             29      M
-## 42:    W           720 ILCS 5/12-4.3(a)             19      M
-## 43:    W              720 ILCS 5/24-1.1             17      M
-## 44:    W                  38-10-2(a)(3)             51      M
-##     race               charges_citation age_at_booking gender
-##            booking_date      jail_id     bail_status housing_location
-##  1: 2013-01-19 00:00:00 2013-0119222              NA         08-2N-DR
-##  2: 2013-01-18 00:00:00 2013-0118220              NA      11-AH-3-411
-##  3: 2013-01-18 00:00:00 2013-0118212              NA              02-
-##  4: 2013-01-18 00:00:00 2013-0118203              NA      02-D4-MU-1-
-##  5: 2013-01-18 00:00:00 2013-0118056              NA       05-D-1-2-1
-##  6: 2013-01-18 00:00:00 2013-0118051              NA      02-D1-H-3-H
-##  7: 2013-01-13 00:00:00 2013-0113043         NO BOND       03-A-2-4-2
-##  8: 2013-01-11 00:00:00 2013-0111097              NA      11-AF-3-311
-##  9: 2013-01-04 00:00:00 2013-0104171         NO BOND       01-B-2-3-1
-## 10: 2013-01-03 00:00:00 2013-0103001              NA      02-D3-HH-3-
-## 11: 2012-12-28 00:00:00 2012-1228050         NO BOND      03-AX-D3-1-
-## 12: 2012-12-27 00:00:00 2012-1227035              NA      02-D4-QU-1-
-## 13: 2012-12-22 12:28:29 2012-1217166              NA      03-AX-B1-1-
-## 14: 2012-12-07 00:00:00 2012-1207055         NO BOND       03-A-3-4-1
-## 15: 2012-12-03 00:00:00 2012-1203014         NO BOND      02-D4-RL-1-
-## 16: 2012-12-02 00:00:00 2012-1202178         NO BOND       10-A-3-8-2
-## 17: 2012-12-22 11:37:58 2012-1121001              NA      02-D1-A-2-A
-## 18: 2012-12-15 22:40:08 2012-1117082 Bond in Process      02-D2-W-2-W
-## 19: 2012-11-16 00:00:00 2012-1116207              NA      02-D4-ML-1-
-## 20: 2012-11-02 00:00:00 2012-1102164              NA      14-B4-4-42-
-## 21: 2012-10-31 00:00:00 2012-1031214         NO BOND      04-J-1-11-1
-## 22: 2012-10-30 00:00:00 2012-1030177         NO BOND      02-D1-A-2-A
-## 23: 2012-10-29 00:00:00 2012-1029031         NO BOND      03-A-2-19-1
-## 24: 2012-12-18 02:02:39 2012-1017203              NA      02-D2-U-3-U
-## 25: 2012-12-15 03:10:58 2012-1011190              NA          17-SFFP
-## 26: 2012-10-10 00:00:00 2012-1010016         NO BOND      03-A-1-26-1
-## 27: 2012-09-20 00:00:00 2012-0920237         NO BOND      06-H-2-19-2
-## 28: 2012-12-22 12:23:40 2012-0909136              NA      11-AC-1-208
-## 29: 2012-09-04 00:00:00 2012-0904227 Bond in Process            15-EM
-## 30: 2012-08-31 00:00:00 2012-0831240         NO BOND       01-E-1-1-1
-## 31: 2012-08-29 00:00:00 2012-0829215              NA      01-G-3-16-1
-## 32: 2012-08-08 00:00:00 2012-0808183         NO BOND            15-EM
-## 33: 2012-07-10 00:00:00 2012-0710111              NA       06-D-1-3-2
-## 34: 2012-07-08 00:00:00 2012-0708142         NO BOND            15-EM
-## 35: 2012-07-02 00:00:00 2012-0702163              NA      17-WR-N-C-2
-## 36: 2012-06-22 00:00:00 2012-0622226         NO BOND       01-A-3-3-2
-## 37: 2012-06-16 00:00:00 2012-0616119              NA      06-H-1-12-2
-## 38: 2012-05-09 00:00:00 2012-0509091              NA      02-D1-H-3-H
-## 39: 2012-03-20 00:00:00 2012-0320179 Bond in Process            15-DR
-## 40: 2011-12-14 00:00:00 2011-1214202              NA       10-C-1-7-1
-## 41: 2011-11-16 00:00:00 2011-1116167         NO BOND          C DISCH
-## 42: 2011-10-07 00:00:00 2011-1007202              NA      11-DH-3-411
-## 43: 2010-09-09 00:00:00 2010-0909032              NA      06-C-1-13-1
-## 44: 2010-04-19 00:00:00 2010-0419201              NA      01-H-1-13-2
-##            booking_date      jail_id     bail_status housing_location
-##                                              charges bail_amount
-##  1:                                               NA       50000
-##  2:                         DRVG ON SUSP LICENSE/FTA       10000
-##  3:                                               NA       10000
-##  4:                         DRVG ON SUSP LICENSE/FTA        3000
-##  5:                        CRIM SEX ASSAULT/FAMILIES       50000
-##  6:                           VIOLATION OF PROBATION      100000
-##  7:                                 BATTERY/DOMESTIC        5000
-##  8:                     MFG/DEL 900+ GR COCAINE/ANLG        5000
-##  9:                        AGG BATTERY/PEACE OFFICER          NA
-## 10:                     DOMESTIC BATTERY/BODILY HARM        5000
-## 11:                                        MFG/DEL 1          NA
-## 12:                            RET THEFT/DISP MERCH/        5000
-## 13:                   POSS AMT CON SUB EXCEPT(A)/(D)        5000
-## 14:                           VIOLATION OF PROBATION          NA
-## 15:                       KNOW DAMAGE PROP >$300-10K          NA
-## 16:                   BATTERY/MAKES PHYSICAL CONTACT       50000
-## 17:                   DRIVING REVOKED/SUSPENDED 2ND+      500000
-## 18:                       OBSTRUCTING IDENTIFICATION          NA
-## 19:                                          BATTERY       25000
-## 20:                   POSS AMT CON SUB EXCEPT(A)/(D)       75000
-## 21:                    THEFT/LABOR/SERVICES/PROPERTY          NA
-## 22:                                         BURGLARY          NA
-## 23:                       OBSTRUCTING IDENTIFICATION          NA
-## 24:                   DOMESTIC BTRY/PHYSICAL CONTACT       20000
-## 25:                                           DUI/6+      200000
-## 26:                   POSS AMT CON SUB EXCEPT(A)/(D)       50000
-## 27:                    DUI/BAC .16 OR CHILD PASS/1ST          NA
-## 28:                   POSS AMT CON SUB EXCEPT(A)/(D)       40000
-## 29:                    DUI ALCOHOL W/CHILD PASSENGER          NA
-## 30:              BURGLARY SCHOOL OR PLACE OF WORSHIP       10000
-## 31:                         UNKNOWN OR NOT AVAILABLE      500000
-## 32:                                               NA          NA
-## 33:                        DUI/INTOXICATING COMPOUND     1000000
-## 34:                                               NA          NA
-## 35:                        DUI/INTOXICATING COMPOUND       95000
-## 36:     FIRST DEGREE MURDER:INTENDS DEATH/GREAT HARM          NA
-## 37: UNLAWFUL POSSESSION OF FIREARM:EXPLOSIVE BULLETS        5000
-## 38:                        DUI/INTOXICATING COMPOUND       35000
-## 39:      ILLEGAL POSSESSION OF CONTROLLED SUBSTANCES          NA
-## 40:                    MAN/DEL CANNABIS/>5,000 GRAMS      500000
-## 41:                   PREDATORY CRIMINAL SEXUAL ASLT      750000
-## 42:  AGGRAVATED BATTERY OF A CHILD:FIREARM/DISC/HARM      200000
-## 43: UNLAWFUL USE/POSSESSION OF WEAPON:FELON PRISONER      100000
-## 44:                AGGRAVATED KIDNAPING:INFLICT HARM     5000000
-##                                              charges bail_amount
-##     discharge_date_earliest
-##  1:                    <NA>
-##  2:                    <NA>
-##  3:     2013-01-19 06:32:06
-##  4:                    <NA>
-##  5:                    <NA>
-##  6:                    <NA>
-##  7:                    <NA>
-##  8:                    <NA>
-##  9:                    <NA>
-## 10:     2013-01-14 06:27:53
-## 11:     2012-12-30 18:25:17
-## 12:                    <NA>
-## 13:     2012-12-23 11:06:55
-## 14:                    <NA>
-## 15:                    <NA>
-## 16:     2013-01-09 05:04:27
-## 17:     2012-12-23 10:27:10
-## 18:     2012-12-15 01:49:02
-## 19:     2013-01-05 06:48:04
-## 20:                    <NA>
-## 21:     2012-12-19 23:27:34
-## 22:                    <NA>
-## 23:     2013-01-14 06:43:50
-## 24:     2012-12-17 01:06:47
-## 25:     2012-12-14 02:44:33
-## 26:     2013-01-11 05:07:45
-## 27:                    <NA>
-## 28:     2012-12-23 11:01:37
-## 29:     2012-12-19 23:27:30
-## 30:                    <NA>
-## 31:                    <NA>
-## 32:     2013-01-06 06:41:44
-## 33:                    <NA>
-## 34:                    <NA>
-## 35:                    <NA>
-## 36:     2012-12-17 00:10:14
-## 37:     2013-01-13 07:18:08
-## 38:     2013-01-19 07:20:07
-## 39:                    <NA>
-## 40:                    <NA>
-## 41:     2012-12-17 22:35:19
-## 42:                    <NA>
-## 43:                    <NA>
-## 44:                    <NA>
-##     discharge_date_earliest
+##     race gender               charges_citation housing_location
+##  1:    W      M 720 ILCS 5 12-3.4(a)(1) [16128         08-2N-DR
+##  2:    W      M    625 ILCS 5 6-303(a) [13526]      11-AH-3-411
+##  3:    W      M   625 ILCS 5 11-501(a) [14041]              02-
+##  4:    W      M    625 ILCS 5 6-303(a) [13526]      02-D4-MU-1-
+##  5:    W      M 720 ILCS 5 12-13(a)(3) [995700       05-D-1-2-1
+##  6:    W      M                            000      02-D1-H-3-H
+##  7:    W      M     720 ILCS 5 12-3.2 [930200]       03-A-2-4-2
+##  8:    W      M 720 ILCS 570 401(a)(2)(D) [509      11-AF-3-311
+##  9:    W      M 720 ILCS 5 12-3.05(d)(4) [1610       01-B-2-3-1
+## 10:    W      M 720 ILCS 5 12-3.2(a)(1) [10416      02-D3-HH-3-
+## 11:    W      M 720 ILCS 570 401(c)(1) [13009]      03-AX-D3-1-
+## 12:    W      M    720 ILCS 5 16A-3(a) [15599]      02-D4-QU-1-
+## 13:    W      M  720 ILCS 570 402(c) [5101110]      03-AX-B1-1-
+## 14:    W      M                            000       03-A-3-4-1
+## 15:    W      M    720 ILCS 5 12-1(a) [920000]      02-D4-RL-1-
+## 16:    W      M  720 ILCS 5 12-3(a)(2) [10530]       10-A-3-8-2
+## 17:    W      M  625 ILCS 5 6-303(d) [5883000]      02-D1-A-2-A
+## 18:    W      M  720 ILCS 5 16A-3(a) [1060000]      02-D2-W-2-W
+## 19:    W      M       720 ILCS 5 12-3 [930000]      02-D4-ML-1-
+## 20:    W      M  720 ILCS 570 402(c) [5101110]      14-B4-4-42-
+## 21:    W      F   720 ILCS 5 16-3(a) [1025000]      04-J-1-11-1
+## 22:    W      M   720 ILCS 5 19-1(a) [1110000]      02-D1-A-2-A
+## 23:    W      M 720 ILCS 5 12-3.2(a)(1) [10416      03-A-2-19-1
+## 24:    W      M 720 ILCS 5 12-3.2(a)(2) [10418      02-D2-U-3-U
+## 25:    W      F   625 ILCS 5 11-501(a) [14039]          17-SFFP
+## 26:    W      M  720 ILCS 570 402(c) [5101110]      03-A-1-26-1
+## 27:    W      M   625 ILCS 5 11-501(a) [12809]      06-H-2-19-2
+## 28:    W      M  720 ILCS 570 402(c) [5101110]      11-AC-1-208
+## 29:    W      M 625 ILCS 5 11-501(a)(2) [11309            15-EM
+## 30:    W      M             720 ILCS 5/19-1(a)       01-E-1-1-1
+## 31:    W      M                        UNKNOWN      01-G-3-16-1
+## 32:    W      M            625 ILCS 5/6-303(a)            15-EM
+## 33:    W      M           625 ILCS 5/11-501(a)       06-D-1-3-2
+## 34:    W      M             720 ILCS 5/19-1(a)            15-EM
+## 35:    W      F           625 ILCS 5/11-501(a)      17-WR-N-C-2
+## 36:    W      M           720 ILCS 5/9-1(a)(1)       01-A-3-3-2
+## 37:    W      M                38-24-3.1(a)(6)      06-H-1-12-2
+## 38:    W      M           625 ILCS 5/11-501(a)      02-D1-H-3-H
+## 39:    W      M               720 ILCS 570/402            15-DR
+## 40:    W      M              720 ILCS 550/5(g)       10-C-1-7-1
+## 41:    W      M       720 ILCS 5/12-14.1(a)(1)          C DISCH
+## 42:    W      M           720 ILCS 5/12-4.3(a)      11-DH-3-411
+## 43:    W      M              720 ILCS 5/24-1.1      06-C-1-13-1
+## 44:    W      M                  38-10-2(a)(3)      01-H-1-13-2
+##     race gender               charges_citation housing_location
 ```
 
 ```r
-dat[J("W")]
+## Simple inner Join, old syntax
+datSmall[J("W")]
 ```
 
 ```
-##     race               charges_citation age_at_booking gender
-##  1:    W 720 ILCS 5 12-3.4(a)(1) [16128             34      M
-##  2:    W    625 ILCS 5 6-303(a) [13526]             34      M
-##  3:    W   625 ILCS 5 11-501(a) [14041]             34      M
-##  4:    W    625 ILCS 5 6-303(a) [13526]             33      M
-##  5:    W 720 ILCS 5 12-13(a)(3) [995700             39      M
-##  6:    W                            000             26      M
-##  7:    W     720 ILCS 5 12-3.2 [930200]             25      M
-##  8:    W 720 ILCS 570 401(a)(2)(D) [509             35      M
-##  9:    W 720 ILCS 5 12-3.05(d)(4) [1610             20      M
-## 10:    W 720 ILCS 5 12-3.2(a)(1) [10416             43      M
-## 11:    W 720 ILCS 570 401(c)(1) [13009]             21      M
-## 12:    W    720 ILCS 5 16A-3(a) [15599]             23      M
-## 13:    W  720 ILCS 570 402(c) [5101110]             42      M
-## 14:    W                            000             19      M
-## 15:    W    720 ILCS 5 12-1(a) [920000]             33      M
-## 16:    W  720 ILCS 5 12-3(a)(2) [10530]             25      M
-## 17:    W  625 ILCS 5 6-303(d) [5883000]             33      M
-## 18:    W  720 ILCS 5 16A-3(a) [1060000]             20      M
-## 19:    W       720 ILCS 5 12-3 [930000]             19      M
-## 20:    W  720 ILCS 570 402(c) [5101110]             53      M
-## 21:    W   720 ILCS 5 16-3(a) [1025000]             27      F
-## 22:    W   720 ILCS 5 19-1(a) [1110000]             21      M
-## 23:    W 720 ILCS 5 12-3.2(a)(1) [10416             36      M
-## 24:    W 720 ILCS 5 12-3.2(a)(2) [10418             26      M
-## 25:    W   625 ILCS 5 11-501(a) [14039]             24      F
-## 26:    W  720 ILCS 570 402(c) [5101110]             43      M
-## 27:    W   625 ILCS 5 11-501(a) [12809]             38      M
-## 28:    W  720 ILCS 570 402(c) [5101110]             22      M
-## 29:    W 625 ILCS 5 11-501(a)(2) [11309             23      M
-## 30:    W             720 ILCS 5/19-1(a)             19      M
-## 31:    W                        UNKNOWN             36      M
-## 32:    W            625 ILCS 5/6-303(a)             46      M
-## 33:    W           625 ILCS 5/11-501(a)             25      M
-## 34:    W             720 ILCS 5/19-1(a)             19      M
-## 35:    W           625 ILCS 5/11-501(a)             21      F
-## 36:    W           720 ILCS 5/9-1(a)(1)             23      M
-## 37:    W                38-24-3.1(a)(6)             20      M
-## 38:    W           625 ILCS 5/11-501(a)             44      M
-## 39:    W               720 ILCS 570/402             18      M
-## 40:    W              720 ILCS 550/5(g)             57      M
-## 41:    W       720 ILCS 5/12-14.1(a)(1)             29      M
-## 42:    W           720 ILCS 5/12-4.3(a)             19      M
-## 43:    W              720 ILCS 5/24-1.1             17      M
-## 44:    W                  38-10-2(a)(3)             51      M
-##     race               charges_citation age_at_booking gender
-##            booking_date      jail_id     bail_status housing_location
-##  1: 2013-01-19 00:00:00 2013-0119222              NA         08-2N-DR
-##  2: 2013-01-18 00:00:00 2013-0118220              NA      11-AH-3-411
-##  3: 2013-01-18 00:00:00 2013-0118212              NA              02-
-##  4: 2013-01-18 00:00:00 2013-0118203              NA      02-D4-MU-1-
-##  5: 2013-01-18 00:00:00 2013-0118056              NA       05-D-1-2-1
-##  6: 2013-01-18 00:00:00 2013-0118051              NA      02-D1-H-3-H
-##  7: 2013-01-13 00:00:00 2013-0113043         NO BOND       03-A-2-4-2
-##  8: 2013-01-11 00:00:00 2013-0111097              NA      11-AF-3-311
-##  9: 2013-01-04 00:00:00 2013-0104171         NO BOND       01-B-2-3-1
-## 10: 2013-01-03 00:00:00 2013-0103001              NA      02-D3-HH-3-
-## 11: 2012-12-28 00:00:00 2012-1228050         NO BOND      03-AX-D3-1-
-## 12: 2012-12-27 00:00:00 2012-1227035              NA      02-D4-QU-1-
-## 13: 2012-12-22 12:28:29 2012-1217166              NA      03-AX-B1-1-
-## 14: 2012-12-07 00:00:00 2012-1207055         NO BOND       03-A-3-4-1
-## 15: 2012-12-03 00:00:00 2012-1203014         NO BOND      02-D4-RL-1-
-## 16: 2012-12-02 00:00:00 2012-1202178         NO BOND       10-A-3-8-2
-## 17: 2012-12-22 11:37:58 2012-1121001              NA      02-D1-A-2-A
-## 18: 2012-12-15 22:40:08 2012-1117082 Bond in Process      02-D2-W-2-W
-## 19: 2012-11-16 00:00:00 2012-1116207              NA      02-D4-ML-1-
-## 20: 2012-11-02 00:00:00 2012-1102164              NA      14-B4-4-42-
-## 21: 2012-10-31 00:00:00 2012-1031214         NO BOND      04-J-1-11-1
-## 22: 2012-10-30 00:00:00 2012-1030177         NO BOND      02-D1-A-2-A
-## 23: 2012-10-29 00:00:00 2012-1029031         NO BOND      03-A-2-19-1
-## 24: 2012-12-18 02:02:39 2012-1017203              NA      02-D2-U-3-U
-## 25: 2012-12-15 03:10:58 2012-1011190              NA          17-SFFP
-## 26: 2012-10-10 00:00:00 2012-1010016         NO BOND      03-A-1-26-1
-## 27: 2012-09-20 00:00:00 2012-0920237         NO BOND      06-H-2-19-2
-## 28: 2012-12-22 12:23:40 2012-0909136              NA      11-AC-1-208
-## 29: 2012-09-04 00:00:00 2012-0904227 Bond in Process            15-EM
-## 30: 2012-08-31 00:00:00 2012-0831240         NO BOND       01-E-1-1-1
-## 31: 2012-08-29 00:00:00 2012-0829215              NA      01-G-3-16-1
-## 32: 2012-08-08 00:00:00 2012-0808183         NO BOND            15-EM
-## 33: 2012-07-10 00:00:00 2012-0710111              NA       06-D-1-3-2
-## 34: 2012-07-08 00:00:00 2012-0708142         NO BOND            15-EM
-## 35: 2012-07-02 00:00:00 2012-0702163              NA      17-WR-N-C-2
-## 36: 2012-06-22 00:00:00 2012-0622226         NO BOND       01-A-3-3-2
-## 37: 2012-06-16 00:00:00 2012-0616119              NA      06-H-1-12-2
-## 38: 2012-05-09 00:00:00 2012-0509091              NA      02-D1-H-3-H
-## 39: 2012-03-20 00:00:00 2012-0320179 Bond in Process            15-DR
-## 40: 2011-12-14 00:00:00 2011-1214202              NA       10-C-1-7-1
-## 41: 2011-11-16 00:00:00 2011-1116167         NO BOND          C DISCH
-## 42: 2011-10-07 00:00:00 2011-1007202              NA      11-DH-3-411
-## 43: 2010-09-09 00:00:00 2010-0909032              NA      06-C-1-13-1
-## 44: 2010-04-19 00:00:00 2010-0419201              NA      01-H-1-13-2
-##            booking_date      jail_id     bail_status housing_location
-##                                              charges bail_amount
-##  1:                                               NA       50000
-##  2:                         DRVG ON SUSP LICENSE/FTA       10000
-##  3:                                               NA       10000
-##  4:                         DRVG ON SUSP LICENSE/FTA        3000
-##  5:                        CRIM SEX ASSAULT/FAMILIES       50000
-##  6:                           VIOLATION OF PROBATION      100000
-##  7:                                 BATTERY/DOMESTIC        5000
-##  8:                     MFG/DEL 900+ GR COCAINE/ANLG        5000
-##  9:                        AGG BATTERY/PEACE OFFICER          NA
-## 10:                     DOMESTIC BATTERY/BODILY HARM        5000
-## 11:                                        MFG/DEL 1          NA
-## 12:                            RET THEFT/DISP MERCH/        5000
-## 13:                   POSS AMT CON SUB EXCEPT(A)/(D)        5000
-## 14:                           VIOLATION OF PROBATION          NA
-## 15:                       KNOW DAMAGE PROP >$300-10K          NA
-## 16:                   BATTERY/MAKES PHYSICAL CONTACT       50000
-## 17:                   DRIVING REVOKED/SUSPENDED 2ND+      500000
-## 18:                       OBSTRUCTING IDENTIFICATION          NA
-## 19:                                          BATTERY       25000
-## 20:                   POSS AMT CON SUB EXCEPT(A)/(D)       75000
-## 21:                    THEFT/LABOR/SERVICES/PROPERTY          NA
-## 22:                                         BURGLARY          NA
-## 23:                       OBSTRUCTING IDENTIFICATION          NA
-## 24:                   DOMESTIC BTRY/PHYSICAL CONTACT       20000
-## 25:                                           DUI/6+      200000
-## 26:                   POSS AMT CON SUB EXCEPT(A)/(D)       50000
-## 27:                    DUI/BAC .16 OR CHILD PASS/1ST          NA
-## 28:                   POSS AMT CON SUB EXCEPT(A)/(D)       40000
-## 29:                    DUI ALCOHOL W/CHILD PASSENGER          NA
-## 30:              BURGLARY SCHOOL OR PLACE OF WORSHIP       10000
-## 31:                         UNKNOWN OR NOT AVAILABLE      500000
-## 32:                                               NA          NA
-## 33:                        DUI/INTOXICATING COMPOUND     1000000
-## 34:                                               NA          NA
-## 35:                        DUI/INTOXICATING COMPOUND       95000
-## 36:     FIRST DEGREE MURDER:INTENDS DEATH/GREAT HARM          NA
-## 37: UNLAWFUL POSSESSION OF FIREARM:EXPLOSIVE BULLETS        5000
-## 38:                        DUI/INTOXICATING COMPOUND       35000
-## 39:      ILLEGAL POSSESSION OF CONTROLLED SUBSTANCES          NA
-## 40:                    MAN/DEL CANNABIS/>5,000 GRAMS      500000
-## 41:                   PREDATORY CRIMINAL SEXUAL ASLT      750000
-## 42:  AGGRAVATED BATTERY OF A CHILD:FIREARM/DISC/HARM      200000
-## 43: UNLAWFUL USE/POSSESSION OF WEAPON:FELON PRISONER      100000
-## 44:                AGGRAVATED KIDNAPING:INFLICT HARM     5000000
-##                                              charges bail_amount
-##     discharge_date_earliest
-##  1:                    <NA>
-##  2:                    <NA>
-##  3:     2013-01-19 06:32:06
-##  4:                    <NA>
-##  5:                    <NA>
-##  6:                    <NA>
-##  7:                    <NA>
-##  8:                    <NA>
-##  9:                    <NA>
-## 10:     2013-01-14 06:27:53
-## 11:     2012-12-30 18:25:17
-## 12:                    <NA>
-## 13:     2012-12-23 11:06:55
-## 14:                    <NA>
-## 15:                    <NA>
-## 16:     2013-01-09 05:04:27
-## 17:     2012-12-23 10:27:10
-## 18:     2012-12-15 01:49:02
-## 19:     2013-01-05 06:48:04
-## 20:                    <NA>
-## 21:     2012-12-19 23:27:34
-## 22:                    <NA>
-## 23:     2013-01-14 06:43:50
-## 24:     2012-12-17 01:06:47
-## 25:     2012-12-14 02:44:33
-## 26:     2013-01-11 05:07:45
-## 27:                    <NA>
-## 28:     2012-12-23 11:01:37
-## 29:     2012-12-19 23:27:30
-## 30:                    <NA>
-## 31:                    <NA>
-## 32:     2013-01-06 06:41:44
-## 33:                    <NA>
-## 34:                    <NA>
-## 35:                    <NA>
-## 36:     2012-12-17 00:10:14
-## 37:     2013-01-13 07:18:08
-## 38:     2013-01-19 07:20:07
-## 39:                    <NA>
-## 40:                    <NA>
-## 41:     2012-12-17 22:35:19
-## 42:                    <NA>
-## 43:                    <NA>
-## 44:                    <NA>
-##     discharge_date_earliest
+##     race gender               charges_citation housing_location
+##  1:    W      M 720 ILCS 5 12-3.4(a)(1) [16128         08-2N-DR
+##  2:    W      M    625 ILCS 5 6-303(a) [13526]      11-AH-3-411
+##  3:    W      M   625 ILCS 5 11-501(a) [14041]              02-
+##  4:    W      M    625 ILCS 5 6-303(a) [13526]      02-D4-MU-1-
+##  5:    W      M 720 ILCS 5 12-13(a)(3) [995700       05-D-1-2-1
+##  6:    W      M                            000      02-D1-H-3-H
+##  7:    W      M     720 ILCS 5 12-3.2 [930200]       03-A-2-4-2
+##  8:    W      M 720 ILCS 570 401(a)(2)(D) [509      11-AF-3-311
+##  9:    W      M 720 ILCS 5 12-3.05(d)(4) [1610       01-B-2-3-1
+## 10:    W      M 720 ILCS 5 12-3.2(a)(1) [10416      02-D3-HH-3-
+## 11:    W      M 720 ILCS 570 401(c)(1) [13009]      03-AX-D3-1-
+## 12:    W      M    720 ILCS 5 16A-3(a) [15599]      02-D4-QU-1-
+## 13:    W      M  720 ILCS 570 402(c) [5101110]      03-AX-B1-1-
+## 14:    W      M                            000       03-A-3-4-1
+## 15:    W      M    720 ILCS 5 12-1(a) [920000]      02-D4-RL-1-
+## 16:    W      M  720 ILCS 5 12-3(a)(2) [10530]       10-A-3-8-2
+## 17:    W      M  625 ILCS 5 6-303(d) [5883000]      02-D1-A-2-A
+## 18:    W      M  720 ILCS 5 16A-3(a) [1060000]      02-D2-W-2-W
+## 19:    W      M       720 ILCS 5 12-3 [930000]      02-D4-ML-1-
+## 20:    W      M  720 ILCS 570 402(c) [5101110]      14-B4-4-42-
+## 21:    W      F   720 ILCS 5 16-3(a) [1025000]      04-J-1-11-1
+## 22:    W      M   720 ILCS 5 19-1(a) [1110000]      02-D1-A-2-A
+## 23:    W      M 720 ILCS 5 12-3.2(a)(1) [10416      03-A-2-19-1
+## 24:    W      M 720 ILCS 5 12-3.2(a)(2) [10418      02-D2-U-3-U
+## 25:    W      F   625 ILCS 5 11-501(a) [14039]          17-SFFP
+## 26:    W      M  720 ILCS 570 402(c) [5101110]      03-A-1-26-1
+## 27:    W      M   625 ILCS 5 11-501(a) [12809]      06-H-2-19-2
+## 28:    W      M  720 ILCS 570 402(c) [5101110]      11-AC-1-208
+## 29:    W      M 625 ILCS 5 11-501(a)(2) [11309            15-EM
+## 30:    W      M             720 ILCS 5/19-1(a)       01-E-1-1-1
+## 31:    W      M                        UNKNOWN      01-G-3-16-1
+## 32:    W      M            625 ILCS 5/6-303(a)            15-EM
+## 33:    W      M           625 ILCS 5/11-501(a)       06-D-1-3-2
+## 34:    W      M             720 ILCS 5/19-1(a)            15-EM
+## 35:    W      F           625 ILCS 5/11-501(a)      17-WR-N-C-2
+## 36:    W      M           720 ILCS 5/9-1(a)(1)       01-A-3-3-2
+## 37:    W      M                38-24-3.1(a)(6)      06-H-1-12-2
+## 38:    W      M           625 ILCS 5/11-501(a)      02-D1-H-3-H
+## 39:    W      M               720 ILCS 570/402            15-DR
+## 40:    W      M              720 ILCS 550/5(g)       10-C-1-7-1
+## 41:    W      M       720 ILCS 5/12-14.1(a)(1)          C DISCH
+## 42:    W      M           720 ILCS 5/12-4.3(a)      11-DH-3-411
+## 43:    W      M              720 ILCS 5/24-1.1      06-C-1-13-1
+## 44:    W      M                  38-10-2(a)(3)      01-H-1-13-2
+##     race gender               charges_citation housing_location
 ```
 
 ```r
-dat[J(c("W", "WH"))]
+## You can select more than one key
+datSmall[J(c("W", "WH"))]
 ```
 
 ```
-##       race               charges_citation age_at_booking gender
-##    1:    W 720 ILCS 5 12-3.4(a)(1) [16128             34      M
-##    2:    W    625 ILCS 5 6-303(a) [13526]             34      M
-##    3:    W   625 ILCS 5 11-501(a) [14041]             34      M
-##    4:    W    625 ILCS 5 6-303(a) [13526]             33      M
-##    5:    W 720 ILCS 5 12-13(a)(3) [995700             39      M
-##   ---                                                          
-## 2055:   WH            720 ILCS 5/32-10(a)             50      M
-## 2056:   WH                         38-9-1             18      M
-## 2057:   WH                        38-19-3             32      M
-## 2058:   WH                       56.5-704             26      M
-## 2059:   WH                    95.5-11-501             31      M
-##       booking_date      jail_id bail_status housing_location
-##    1:   2013-01-19 2013-0119222          NA         08-2N-DR
-##    2:   2013-01-18 2013-0118220          NA      11-AH-3-411
-##    3:   2013-01-18 2013-0118212          NA              02-
-##    4:   2013-01-18 2013-0118203          NA      02-D4-MU-1-
-##    5:   2013-01-18 2013-0118056          NA       05-D-1-2-1
-##   ---                                                       
-## 2055:   1996-12-18 1996-9683431     NO BOND       01-H-1-6-1
-## 2056:   1996-10-03 1996-9664677          NA          15-EMAW
-## 2057:   1996-07-12 1996-9644229          NA          15-EMAW
-## 2058:   1995-07-27 1995-9551250          NA          15-EMAW
-## 2059:   1995-05-09 1995-9532061     NO BOND          15-DRAW
-##                            charges bail_amount discharge_date_earliest
-##    1:                           NA       50000                    <NA>
-##    2:     DRVG ON SUSP LICENSE/FTA       10000                    <NA>
-##    3:                           NA       10000     2013-01-19 06:32:06
-##    4:     DRVG ON SUSP LICENSE/FTA        3000                    <NA>
-##    5:    CRIM SEX ASSAULT/FAMILIES       50000                    <NA>
-##   ---                                                                 
-## 2055: VIO BAIL BOND/CLASS M CONVIC          NA                    <NA>
-## 2056:                           NA      100000                    <NA>
-## 2057:                           NA       15000                    <NA>
-## 2058:                           NA       85000                    <NA>
-## 2059:                           NA          NA                    <NA>
+##       race gender               charges_citation housing_location
+##    1:    W      M 720 ILCS 5 12-3.4(a)(1) [16128         08-2N-DR
+##    2:    W      M    625 ILCS 5 6-303(a) [13526]      11-AH-3-411
+##    3:    W      M   625 ILCS 5 11-501(a) [14041]              02-
+##    4:    W      M    625 ILCS 5 6-303(a) [13526]      02-D4-MU-1-
+##    5:    W      M 720 ILCS 5 12-13(a)(3) [995700       05-D-1-2-1
+##   ---                                                            
+## 2055:   WH      M            720 ILCS 5/32-10(a)       01-H-1-6-1
+## 2056:   WH      M                         38-9-1          15-EMAW
+## 2057:   WH      M                        38-19-3          15-EMAW
+## 2058:   WH      M                       56.5-704          15-EMAW
+## 2059:   WH      M                    95.5-11-501          15-DRAW
+```
+
+```r
+## This still works
+datSmall[c("W", "WH")]
+```
+
+```
+##       race gender               charges_citation housing_location
+##    1:    W      M 720 ILCS 5 12-3.4(a)(1) [16128         08-2N-DR
+##    2:    W      M    625 ILCS 5 6-303(a) [13526]      11-AH-3-411
+##    3:    W      M   625 ILCS 5 11-501(a) [14041]              02-
+##    4:    W      M    625 ILCS 5 6-303(a) [13526]      02-D4-MU-1-
+##    5:    W      M 720 ILCS 5 12-13(a)(3) [995700       05-D-1-2-1
+##   ---                                                            
+## 2055:   WH      M            720 ILCS 5/32-10(a)       01-H-1-6-1
+## 2056:   WH      M                         38-9-1          15-EMAW
+## 2057:   WH      M                        38-19-3          15-EMAW
+## 2058:   WH      M                       56.5-704          15-EMAW
+## 2059:   WH      M                    95.5-11-501          15-DRAW
+```
+
+
+## Examples with two keys: `race` and `gender`
+
+```r
+## Set the key
+setkeyv(datSmall, c("race", "gender"))
+```
+
+
+Let's get records where race == "WH" and gender == "M"
+There should be 1682 records of that sort based on this table:
+
+```r
+datSmall[, .N, keyby = list(race, gender)]
+```
+
+```
+##     race gender     N
+##  1:   AS      F     6
+##  2:   AS      M   111
+##  3:    B      F     3
+##  4:    B      M    26
+##  5:   BK      F  1209
+##  6:   BK      M 12670
+##  7:   IN      F     6
+##  8:   IN      M     7
+##  9:   LB      F     9
+## 10:   LB      M    59
+## 11:   LT      F    73
+## 12:   LT      M  1730
+## 13:   LW      F   100
+## 14:   LW      M  1139
+## 15:    W      F     3
+## 16:    W      M    41
+## 17:   WH      F   333
+## 18:   WH      M  1682
+```
+
+
+## Try using J and CJ on two keys
+
+
+```r
+## This is the first way that I would have guessed to get results for
+## 'white' and 'male', but it doesn't work:
+datSmall[c("WH", "M")]
+```
+
+```
+##       race gender               charges_citation housing_location
+##    1:   WH      F 720 ILCS 5 12-3.2(a)(2) [10418      04-Q-1-11-1
+##    2:   WH      F    720 ILCS 5 16A-3(a) [15601]      17-WR-N-A-2
+##    3:   WH      F  720 ILCS 5 16A-3(a) [1060000]      04-Q-1-17-1
+##    4:   WH      F   720 ILCS 5 11-14(a) [855900]      04-Q-1-19-2
+##    5:   WH      F 625 ILCS 5 11-501(a)(1) [14721      04-Q-1-16-1
+##   ---                                                            
+## 2012:   WH      M                         38-9-1          15-EMAW
+## 2013:   WH      M                        38-19-3          15-EMAW
+## 2014:   WH      M                       56.5-704          15-EMAW
+## 2015:   WH      M                    95.5-11-501          15-DRAW
+## 2016:    M     NA                             NA               NA
+```
+
+```r
+## If I add the summary using .N, you can see that it also selects Females
+## (and returns 1 NA):
+datSmall[c("WH", "M")][, .N, list(race, gender)]
+```
+
+```
+##    race gender    N
+## 1:   WH      F  333
+## 2:   WH      M 1682
+## 3:    M     NA    1
 ```
 
 ```r
 
-setkeyv(dat, c("race", "gender"))
-dat[c("W", "WH")]
+## This one works.
+datSmall[data.table("WH", "M")]
 ```
 
 ```
-##       race               charges_citation age_at_booking gender
-##    1:    W   720 ILCS 5 16-3(a) [1025000]             27      F
-##    2:    W   625 ILCS 5 11-501(a) [14039]             24      F
-##    3:    W           625 ILCS 5/11-501(a)             21      F
-##    4:    W 720 ILCS 5 12-3.4(a)(1) [16128             34      M
-##    5:    W    625 ILCS 5 6-303(a) [13526]             34      M
-##   ---                                                          
-## 2055:   WH            720 ILCS 5/32-10(a)             50      M
-## 2056:   WH                         38-9-1             18      M
-## 2057:   WH                        38-19-3             32      M
-## 2058:   WH                       56.5-704             26      M
-## 2059:   WH                    95.5-11-501             31      M
-##              booking_date      jail_id bail_status housing_location
-##    1: 2012-10-31 00:00:00 2012-1031214     NO BOND      04-J-1-11-1
-##    2: 2012-12-15 03:10:58 2012-1011190          NA          17-SFFP
-##    3: 2012-07-02 00:00:00 2012-0702163          NA      17-WR-N-C-2
-##    4: 2013-01-19 00:00:00 2013-0119222          NA         08-2N-DR
-##    5: 2013-01-18 00:00:00 2013-0118220          NA      11-AH-3-411
-##   ---                                                              
-## 2055: 1996-12-18 00:00:00 1996-9683431     NO BOND       01-H-1-6-1
-## 2056: 1996-10-03 00:00:00 1996-9664677          NA          15-EMAW
-## 2057: 1996-07-12 00:00:00 1996-9644229          NA          15-EMAW
-## 2058: 1995-07-27 00:00:00 1995-9551250          NA          15-EMAW
-## 2059: 1995-05-09 00:00:00 1995-9532061     NO BOND          15-DRAW
-##                             charges bail_amount discharge_date_earliest
-##    1: THEFT/LABOR/SERVICES/PROPERTY          NA     2012-12-19 23:27:34
-##    2:                        DUI/6+      200000     2012-12-14 02:44:33
-##    3:     DUI/INTOXICATING COMPOUND       95000                    <NA>
-##    4:                            NA       50000                    <NA>
-##    5:      DRVG ON SUSP LICENSE/FTA       10000                    <NA>
-##   ---                                                                  
-## 2055:  VIO BAIL BOND/CLASS M CONVIC          NA                    <NA>
-## 2056:                            NA      100000                    <NA>
-## 2057:                            NA       15000                    <NA>
-## 2058:                            NA       85000                    <NA>
-## 2059:                            NA          NA                    <NA>
+##       race gender               charges_citation housing_location
+##    1:   WH      M 720 ILCS 5 12-3.4(a)(2) [16145              05-
+##    2:   WH      M     720 ILCS 5 12-3.2 [930200]       05-L-2-1-2
+##    3:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416         08-2N-DR
+##    4:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416       05-E-2-3-2
+##    5:   WH      M        720 ILCS 5 17-3 [11968]      11-BB-1-210
+##   ---                                                            
+## 1678:   WH      M            720 ILCS 5/32-10(a)       01-H-1-6-1
+## 1679:   WH      M                         38-9-1          15-EMAW
+## 1680:   WH      M                        38-19-3          15-EMAW
+## 1681:   WH      M                       56.5-704          15-EMAW
+## 1682:   WH      M                    95.5-11-501          15-DRAW
 ```
 
 ```r
-dat[c("W", "M")]
+datSmall[data.table("WH", "M")][, .N, list(race, gender)]
 ```
 
 ```
-##     race               charges_citation age_at_booking gender
-##  1:    W   720 ILCS 5 16-3(a) [1025000]             27      F
-##  2:    W   625 ILCS 5 11-501(a) [14039]             24      F
-##  3:    W           625 ILCS 5/11-501(a)             21      F
-##  4:    W 720 ILCS 5 12-3.4(a)(1) [16128             34      M
-##  5:    W    625 ILCS 5 6-303(a) [13526]             34      M
-##  6:    W   625 ILCS 5 11-501(a) [14041]             34      M
-##  7:    W    625 ILCS 5 6-303(a) [13526]             33      M
-##  8:    W 720 ILCS 5 12-13(a)(3) [995700             39      M
-##  9:    W                            000             26      M
-## 10:    W     720 ILCS 5 12-3.2 [930200]             25      M
-## 11:    W 720 ILCS 570 401(a)(2)(D) [509             35      M
-## 12:    W 720 ILCS 5 12-3.05(d)(4) [1610             20      M
-## 13:    W 720 ILCS 5 12-3.2(a)(1) [10416             43      M
-## 14:    W 720 ILCS 570 401(c)(1) [13009]             21      M
-## 15:    W    720 ILCS 5 16A-3(a) [15599]             23      M
-## 16:    W  720 ILCS 570 402(c) [5101110]             42      M
-## 17:    W                            000             19      M
-## 18:    W    720 ILCS 5 12-1(a) [920000]             33      M
-## 19:    W  720 ILCS 5 12-3(a)(2) [10530]             25      M
-## 20:    W  625 ILCS 5 6-303(d) [5883000]             33      M
-## 21:    W  720 ILCS 5 16A-3(a) [1060000]             20      M
-## 22:    W       720 ILCS 5 12-3 [930000]             19      M
-## 23:    W  720 ILCS 570 402(c) [5101110]             53      M
-## 24:    W   720 ILCS 5 19-1(a) [1110000]             21      M
-## 25:    W 720 ILCS 5 12-3.2(a)(1) [10416             36      M
-## 26:    W 720 ILCS 5 12-3.2(a)(2) [10418             26      M
-## 27:    W  720 ILCS 570 402(c) [5101110]             43      M
-## 28:    W   625 ILCS 5 11-501(a) [12809]             38      M
-## 29:    W  720 ILCS 570 402(c) [5101110]             22      M
-## 30:    W 625 ILCS 5 11-501(a)(2) [11309             23      M
-## 31:    W             720 ILCS 5/19-1(a)             19      M
-## 32:    W                        UNKNOWN             36      M
-## 33:    W            625 ILCS 5/6-303(a)             46      M
-## 34:    W           625 ILCS 5/11-501(a)             25      M
-## 35:    W             720 ILCS 5/19-1(a)             19      M
-## 36:    W           720 ILCS 5/9-1(a)(1)             23      M
-## 37:    W                38-24-3.1(a)(6)             20      M
-## 38:    W           625 ILCS 5/11-501(a)             44      M
-## 39:    W               720 ILCS 570/402             18      M
-## 40:    W              720 ILCS 550/5(g)             57      M
-## 41:    W       720 ILCS 5/12-14.1(a)(1)             29      M
-## 42:    W           720 ILCS 5/12-4.3(a)             19      M
-## 43:    W              720 ILCS 5/24-1.1             17      M
-## 44:    W                  38-10-2(a)(3)             51      M
-## 45:    M                             NA             NA     NA
-##     race               charges_citation age_at_booking gender
-##            booking_date      jail_id     bail_status housing_location
-##  1: 2012-10-31 00:00:00 2012-1031214         NO BOND      04-J-1-11-1
-##  2: 2012-12-15 03:10:58 2012-1011190              NA          17-SFFP
-##  3: 2012-07-02 00:00:00 2012-0702163              NA      17-WR-N-C-2
-##  4: 2013-01-19 00:00:00 2013-0119222              NA         08-2N-DR
-##  5: 2013-01-18 00:00:00 2013-0118220              NA      11-AH-3-411
-##  6: 2013-01-18 00:00:00 2013-0118212              NA              02-
-##  7: 2013-01-18 00:00:00 2013-0118203              NA      02-D4-MU-1-
-##  8: 2013-01-18 00:00:00 2013-0118056              NA       05-D-1-2-1
-##  9: 2013-01-18 00:00:00 2013-0118051              NA      02-D1-H-3-H
-## 10: 2013-01-13 00:00:00 2013-0113043         NO BOND       03-A-2-4-2
-## 11: 2013-01-11 00:00:00 2013-0111097              NA      11-AF-3-311
-## 12: 2013-01-04 00:00:00 2013-0104171         NO BOND       01-B-2-3-1
-## 13: 2013-01-03 00:00:00 2013-0103001              NA      02-D3-HH-3-
-## 14: 2012-12-28 00:00:00 2012-1228050         NO BOND      03-AX-D3-1-
-## 15: 2012-12-27 00:00:00 2012-1227035              NA      02-D4-QU-1-
-## 16: 2012-12-22 12:28:29 2012-1217166              NA      03-AX-B1-1-
-## 17: 2012-12-07 00:00:00 2012-1207055         NO BOND       03-A-3-4-1
-## 18: 2012-12-03 00:00:00 2012-1203014         NO BOND      02-D4-RL-1-
-## 19: 2012-12-02 00:00:00 2012-1202178         NO BOND       10-A-3-8-2
-## 20: 2012-12-22 11:37:58 2012-1121001              NA      02-D1-A-2-A
-## 21: 2012-12-15 22:40:08 2012-1117082 Bond in Process      02-D2-W-2-W
-## 22: 2012-11-16 00:00:00 2012-1116207              NA      02-D4-ML-1-
-## 23: 2012-11-02 00:00:00 2012-1102164              NA      14-B4-4-42-
-## 24: 2012-10-30 00:00:00 2012-1030177         NO BOND      02-D1-A-2-A
-## 25: 2012-10-29 00:00:00 2012-1029031         NO BOND      03-A-2-19-1
-## 26: 2012-12-18 02:02:39 2012-1017203              NA      02-D2-U-3-U
-## 27: 2012-10-10 00:00:00 2012-1010016         NO BOND      03-A-1-26-1
-## 28: 2012-09-20 00:00:00 2012-0920237         NO BOND      06-H-2-19-2
-## 29: 2012-12-22 12:23:40 2012-0909136              NA      11-AC-1-208
-## 30: 2012-09-04 00:00:00 2012-0904227 Bond in Process            15-EM
-## 31: 2012-08-31 00:00:00 2012-0831240         NO BOND       01-E-1-1-1
-## 32: 2012-08-29 00:00:00 2012-0829215              NA      01-G-3-16-1
-## 33: 2012-08-08 00:00:00 2012-0808183         NO BOND            15-EM
-## 34: 2012-07-10 00:00:00 2012-0710111              NA       06-D-1-3-2
-## 35: 2012-07-08 00:00:00 2012-0708142         NO BOND            15-EM
-## 36: 2012-06-22 00:00:00 2012-0622226         NO BOND       01-A-3-3-2
-## 37: 2012-06-16 00:00:00 2012-0616119              NA      06-H-1-12-2
-## 38: 2012-05-09 00:00:00 2012-0509091              NA      02-D1-H-3-H
-## 39: 2012-03-20 00:00:00 2012-0320179 Bond in Process            15-DR
-## 40: 2011-12-14 00:00:00 2011-1214202              NA       10-C-1-7-1
-## 41: 2011-11-16 00:00:00 2011-1116167         NO BOND          C DISCH
-## 42: 2011-10-07 00:00:00 2011-1007202              NA      11-DH-3-411
-## 43: 2010-09-09 00:00:00 2010-0909032              NA      06-C-1-13-1
-## 44: 2010-04-19 00:00:00 2010-0419201              NA      01-H-1-13-2
-## 45:                <NA>           NA              NA               NA
-##            booking_date      jail_id     bail_status housing_location
-##                                              charges bail_amount
-##  1:                    THEFT/LABOR/SERVICES/PROPERTY          NA
-##  2:                                           DUI/6+      200000
-##  3:                        DUI/INTOXICATING COMPOUND       95000
-##  4:                                               NA       50000
-##  5:                         DRVG ON SUSP LICENSE/FTA       10000
-##  6:                                               NA       10000
-##  7:                         DRVG ON SUSP LICENSE/FTA        3000
-##  8:                        CRIM SEX ASSAULT/FAMILIES       50000
-##  9:                           VIOLATION OF PROBATION      100000
-## 10:                                 BATTERY/DOMESTIC        5000
-## 11:                     MFG/DEL 900+ GR COCAINE/ANLG        5000
-## 12:                        AGG BATTERY/PEACE OFFICER          NA
-## 13:                     DOMESTIC BATTERY/BODILY HARM        5000
-## 14:                                        MFG/DEL 1          NA
-## 15:                            RET THEFT/DISP MERCH/        5000
-## 16:                   POSS AMT CON SUB EXCEPT(A)/(D)        5000
-## 17:                           VIOLATION OF PROBATION          NA
-## 18:                       KNOW DAMAGE PROP >$300-10K          NA
-## 19:                   BATTERY/MAKES PHYSICAL CONTACT       50000
-## 20:                   DRIVING REVOKED/SUSPENDED 2ND+      500000
-## 21:                       OBSTRUCTING IDENTIFICATION          NA
-## 22:                                          BATTERY       25000
-## 23:                   POSS AMT CON SUB EXCEPT(A)/(D)       75000
-## 24:                                         BURGLARY          NA
-## 25:                       OBSTRUCTING IDENTIFICATION          NA
-## 26:                   DOMESTIC BTRY/PHYSICAL CONTACT       20000
-## 27:                   POSS AMT CON SUB EXCEPT(A)/(D)       50000
-## 28:                    DUI/BAC .16 OR CHILD PASS/1ST          NA
-## 29:                   POSS AMT CON SUB EXCEPT(A)/(D)       40000
-## 30:                    DUI ALCOHOL W/CHILD PASSENGER          NA
-## 31:              BURGLARY SCHOOL OR PLACE OF WORSHIP       10000
-## 32:                         UNKNOWN OR NOT AVAILABLE      500000
-## 33:                                               NA          NA
-## 34:                        DUI/INTOXICATING COMPOUND     1000000
-## 35:                                               NA          NA
-## 36:     FIRST DEGREE MURDER:INTENDS DEATH/GREAT HARM          NA
-## 37: UNLAWFUL POSSESSION OF FIREARM:EXPLOSIVE BULLETS        5000
-## 38:                        DUI/INTOXICATING COMPOUND       35000
-## 39:      ILLEGAL POSSESSION OF CONTROLLED SUBSTANCES          NA
-## 40:                    MAN/DEL CANNABIS/>5,000 GRAMS      500000
-## 41:                   PREDATORY CRIMINAL SEXUAL ASLT      750000
-## 42:  AGGRAVATED BATTERY OF A CHILD:FIREARM/DISC/HARM      200000
-## 43: UNLAWFUL USE/POSSESSION OF WEAPON:FELON PRISONER      100000
-## 44:                AGGRAVATED KIDNAPING:INFLICT HARM     5000000
-## 45:                                               NA          NA
-##                                              charges bail_amount
-##     discharge_date_earliest
-##  1:     2012-12-19 23:27:34
-##  2:     2012-12-14 02:44:33
-##  3:                    <NA>
-##  4:                    <NA>
-##  5:                    <NA>
-##  6:     2013-01-19 06:32:06
-##  7:                    <NA>
-##  8:                    <NA>
-##  9:                    <NA>
-## 10:                    <NA>
-## 11:                    <NA>
-## 12:                    <NA>
-## 13:     2013-01-14 06:27:53
-## 14:     2012-12-30 18:25:17
-## 15:                    <NA>
-## 16:     2012-12-23 11:06:55
-## 17:                    <NA>
-## 18:                    <NA>
-## 19:     2013-01-09 05:04:27
-## 20:     2012-12-23 10:27:10
-## 21:     2012-12-15 01:49:02
-## 22:     2013-01-05 06:48:04
-## 23:                    <NA>
-## 24:                    <NA>
-## 25:     2013-01-14 06:43:50
-## 26:     2012-12-17 01:06:47
-## 27:     2013-01-11 05:07:45
-## 28:                    <NA>
-## 29:     2012-12-23 11:01:37
-## 30:     2012-12-19 23:27:30
-## 31:                    <NA>
-## 32:                    <NA>
-## 33:     2013-01-06 06:41:44
-## 34:                    <NA>
-## 35:                    <NA>
-## 36:     2012-12-17 00:10:14
-## 37:     2013-01-13 07:18:08
-## 38:     2013-01-19 07:20:07
-## 39:                    <NA>
-## 40:                    <NA>
-## 41:     2012-12-17 22:35:19
-## 42:                    <NA>
-## 43:                    <NA>
-## 44:                    <NA>
-## 45:                    <NA>
-##     discharge_date_earliest
-```
-
-```r
-dat[data.table("WH", "M")]
-```
-
-```
-##       race gender               charges_citation age_at_booking
-##    1:   WH      M 720 ILCS 5 12-3.4(a)(2) [16145             26
-##    2:   WH      M     720 ILCS 5 12-3.2 [930200]             52
-##    3:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416             39
-##    4:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416             41
-##    5:   WH      M        720 ILCS 5 17-3 [11968]             25
-##   ---                                                          
-## 1678:   WH      M            720 ILCS 5/32-10(a)             50
-## 1679:   WH      M                         38-9-1             18
-## 1680:   WH      M                        38-19-3             32
-## 1681:   WH      M                       56.5-704             26
-## 1682:   WH      M                    95.5-11-501             31
-##       booking_date      jail_id bail_status housing_location
-##    1:   2013-01-20 2013-0120171          NA              05-
-##    2:   2013-01-20 2013-0120151          NA       05-L-2-1-2
-##    3:   2013-01-20 2013-0120145          NA         08-2N-DR
-##    4:   2013-01-20 2013-0120123          NA       05-E-2-3-2
-##    5:   2013-01-20 2013-0120094          NA      11-BB-1-210
-##   ---                                                       
-## 1678:   1996-12-18 1996-9683431     NO BOND       01-H-1-6-1
-## 1679:   1996-10-03 1996-9664677          NA          15-EMAW
-## 1680:   1996-07-12 1996-9644229          NA          15-EMAW
-## 1681:   1995-07-27 1995-9551250          NA          15-EMAW
-## 1682:   1995-05-09 1995-9532061     NO BOND          15-DRAW
-##                            charges bail_amount discharge_date_earliest
-##    1:                           NA        5000                    <NA>
-##    2:                           NA        5000                    <NA>
-##    3:                           NA       25000                    <NA>
-##    4:                           NA       10000                    <NA>
-##    5:                           NA       10000                    <NA>
-##   ---                                                                 
-## 1678: VIO BAIL BOND/CLASS M CONVIC          NA                    <NA>
-## 1679:                           NA      100000                    <NA>
-## 1680:                           NA       15000                    <NA>
-## 1681:                           NA       85000                    <NA>
-## 1682:                           NA          NA                    <NA>
+##    race gender    N
+## 1:   WH      M 1682
 ```
 
 ```r
 
-dat[J("WH", "M")]
+## But it's a little sloppy because you're actually making this data
+## table, and then joining it with the master data:
+data.table("WH", "M")
 ```
 
 ```
-##       race gender               charges_citation age_at_booking
-##    1:   WH      M 720 ILCS 5 12-3.4(a)(2) [16145             26
-##    2:   WH      M     720 ILCS 5 12-3.2 [930200]             52
-##    3:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416             39
-##    4:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416             41
-##    5:   WH      M        720 ILCS 5 17-3 [11968]             25
-##   ---                                                          
-## 1678:   WH      M            720 ILCS 5/32-10(a)             50
-## 1679:   WH      M                         38-9-1             18
-## 1680:   WH      M                        38-19-3             32
-## 1681:   WH      M                       56.5-704             26
-## 1682:   WH      M                    95.5-11-501             31
-##       booking_date      jail_id bail_status housing_location
-##    1:   2013-01-20 2013-0120171          NA              05-
-##    2:   2013-01-20 2013-0120151          NA       05-L-2-1-2
-##    3:   2013-01-20 2013-0120145          NA         08-2N-DR
-##    4:   2013-01-20 2013-0120123          NA       05-E-2-3-2
-##    5:   2013-01-20 2013-0120094          NA      11-BB-1-210
-##   ---                                                       
-## 1678:   1996-12-18 1996-9683431     NO BOND       01-H-1-6-1
-## 1679:   1996-10-03 1996-9664677          NA          15-EMAW
-## 1680:   1996-07-12 1996-9644229          NA          15-EMAW
-## 1681:   1995-07-27 1995-9551250          NA          15-EMAW
-## 1682:   1995-05-09 1995-9532061     NO BOND          15-DRAW
-##                            charges bail_amount discharge_date_earliest
-##    1:                           NA        5000                    <NA>
-##    2:                           NA        5000                    <NA>
-##    3:                           NA       25000                    <NA>
-##    4:                           NA       10000                    <NA>
-##    5:                           NA       10000                    <NA>
-##   ---                                                                 
-## 1678: VIO BAIL BOND/CLASS M CONVIC          NA                    <NA>
-## 1679:                           NA      100000                    <NA>
-## 1680:                           NA       15000                    <NA>
-## 1681:                           NA       85000                    <NA>
-## 1682:                           NA          NA                    <NA>
-```
-
-```r
-dat[CJ("WH", "M")]
-```
-
-```
-##       race gender               charges_citation age_at_booking
-##    1:   WH      M 720 ILCS 5 12-3.4(a)(2) [16145             26
-##    2:   WH      M     720 ILCS 5 12-3.2 [930200]             52
-##    3:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416             39
-##    4:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416             41
-##    5:   WH      M        720 ILCS 5 17-3 [11968]             25
-##   ---                                                          
-## 1678:   WH      M            720 ILCS 5/32-10(a)             50
-## 1679:   WH      M                         38-9-1             18
-## 1680:   WH      M                        38-19-3             32
-## 1681:   WH      M                       56.5-704             26
-## 1682:   WH      M                    95.5-11-501             31
-##       booking_date      jail_id bail_status housing_location
-##    1:   2013-01-20 2013-0120171          NA              05-
-##    2:   2013-01-20 2013-0120151          NA       05-L-2-1-2
-##    3:   2013-01-20 2013-0120145          NA         08-2N-DR
-##    4:   2013-01-20 2013-0120123          NA       05-E-2-3-2
-##    5:   2013-01-20 2013-0120094          NA      11-BB-1-210
-##   ---                                                       
-## 1678:   1996-12-18 1996-9683431     NO BOND       01-H-1-6-1
-## 1679:   1996-10-03 1996-9664677          NA          15-EMAW
-## 1680:   1996-07-12 1996-9644229          NA          15-EMAW
-## 1681:   1995-07-27 1995-9551250          NA          15-EMAW
-## 1682:   1995-05-09 1995-9532061     NO BOND          15-DRAW
-##                            charges bail_amount discharge_date_earliest
-##    1:                           NA        5000                    <NA>
-##    2:                           NA        5000                    <NA>
-##    3:                           NA       25000                    <NA>
-##    4:                           NA       10000                    <NA>
-##    5:                           NA       10000                    <NA>
-##   ---                                                                 
-## 1678: VIO BAIL BOND/CLASS M CONVIC          NA                    <NA>
-## 1679:                           NA      100000                    <NA>
-## 1680:                           NA       15000                    <NA>
-## 1681:                           NA       85000                    <NA>
-## 1682:                           NA          NA                    <NA>
+##    WH M
+## 1: WH M
 ```
 
 ```r
 
-dat[J(c("W", "WH"))]
+## This is the right way to do it.
+datSmall[J("WH", "M")]
 ```
 
 ```
-##       race               charges_citation age_at_booking gender
-##    1:    W   720 ILCS 5 16-3(a) [1025000]             27      F
-##    2:    W   625 ILCS 5 11-501(a) [14039]             24      F
-##    3:    W           625 ILCS 5/11-501(a)             21      F
-##    4:    W 720 ILCS 5 12-3.4(a)(1) [16128             34      M
-##    5:    W    625 ILCS 5 6-303(a) [13526]             34      M
-##   ---                                                          
-## 2055:   WH            720 ILCS 5/32-10(a)             50      M
-## 2056:   WH                         38-9-1             18      M
-## 2057:   WH                        38-19-3             32      M
-## 2058:   WH                       56.5-704             26      M
-## 2059:   WH                    95.5-11-501             31      M
-##              booking_date      jail_id bail_status housing_location
-##    1: 2012-10-31 00:00:00 2012-1031214     NO BOND      04-J-1-11-1
-##    2: 2012-12-15 03:10:58 2012-1011190          NA          17-SFFP
-##    3: 2012-07-02 00:00:00 2012-0702163          NA      17-WR-N-C-2
-##    4: 2013-01-19 00:00:00 2013-0119222          NA         08-2N-DR
-##    5: 2013-01-18 00:00:00 2013-0118220          NA      11-AH-3-411
-##   ---                                                              
-## 2055: 1996-12-18 00:00:00 1996-9683431     NO BOND       01-H-1-6-1
-## 2056: 1996-10-03 00:00:00 1996-9664677          NA          15-EMAW
-## 2057: 1996-07-12 00:00:00 1996-9644229          NA          15-EMAW
-## 2058: 1995-07-27 00:00:00 1995-9551250          NA          15-EMAW
-## 2059: 1995-05-09 00:00:00 1995-9532061     NO BOND          15-DRAW
-##                             charges bail_amount discharge_date_earliest
-##    1: THEFT/LABOR/SERVICES/PROPERTY          NA     2012-12-19 23:27:34
-##    2:                        DUI/6+      200000     2012-12-14 02:44:33
-##    3:     DUI/INTOXICATING COMPOUND       95000                    <NA>
-##    4:                            NA       50000                    <NA>
-##    5:      DRVG ON SUSP LICENSE/FTA       10000                    <NA>
-##   ---                                                                  
-## 2055:  VIO BAIL BOND/CLASS M CONVIC          NA                    <NA>
-## 2056:                            NA      100000                    <NA>
-## 2057:                            NA       15000                    <NA>
-## 2058:                            NA       85000                    <NA>
-## 2059:                            NA          NA                    <NA>
+##       race gender               charges_citation housing_location
+##    1:   WH      M 720 ILCS 5 12-3.4(a)(2) [16145              05-
+##    2:   WH      M     720 ILCS 5 12-3.2 [930200]       05-L-2-1-2
+##    3:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416         08-2N-DR
+##    4:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416       05-E-2-3-2
+##    5:   WH      M        720 ILCS 5 17-3 [11968]      11-BB-1-210
+##   ---                                                            
+## 1678:   WH      M            720 ILCS 5/32-10(a)       01-H-1-6-1
+## 1679:   WH      M                         38-9-1          15-EMAW
+## 1680:   WH      M                        38-19-3          15-EMAW
+## 1681:   WH      M                       56.5-704          15-EMAW
+## 1682:   WH      M                    95.5-11-501          15-DRAW
 ```
 
 ```r
-dat[CJ("WH", "M")]
+datSmall[CJ("WH", "M")]
 ```
 
 ```
-##       race gender               charges_citation age_at_booking
-##    1:   WH      M 720 ILCS 5 12-3.4(a)(2) [16145             26
-##    2:   WH      M     720 ILCS 5 12-3.2 [930200]             52
-##    3:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416             39
-##    4:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416             41
-##    5:   WH      M        720 ILCS 5 17-3 [11968]             25
-##   ---                                                          
-## 1678:   WH      M            720 ILCS 5/32-10(a)             50
-## 1679:   WH      M                         38-9-1             18
-## 1680:   WH      M                        38-19-3             32
-## 1681:   WH      M                       56.5-704             26
-## 1682:   WH      M                    95.5-11-501             31
-##       booking_date      jail_id bail_status housing_location
-##    1:   2013-01-20 2013-0120171          NA              05-
-##    2:   2013-01-20 2013-0120151          NA       05-L-2-1-2
-##    3:   2013-01-20 2013-0120145          NA         08-2N-DR
-##    4:   2013-01-20 2013-0120123          NA       05-E-2-3-2
-##    5:   2013-01-20 2013-0120094          NA      11-BB-1-210
-##   ---                                                       
-## 1678:   1996-12-18 1996-9683431     NO BOND       01-H-1-6-1
-## 1679:   1996-10-03 1996-9664677          NA          15-EMAW
-## 1680:   1996-07-12 1996-9644229          NA          15-EMAW
-## 1681:   1995-07-27 1995-9551250          NA          15-EMAW
-## 1682:   1995-05-09 1995-9532061     NO BOND          15-DRAW
-##                            charges bail_amount discharge_date_earliest
-##    1:                           NA        5000                    <NA>
-##    2:                           NA        5000                    <NA>
-##    3:                           NA       25000                    <NA>
-##    4:                           NA       10000                    <NA>
-##    5:                           NA       10000                    <NA>
-##   ---                                                                 
-## 1678: VIO BAIL BOND/CLASS M CONVIC          NA                    <NA>
-## 1679:                           NA      100000                    <NA>
-## 1680:                           NA       15000                    <NA>
-## 1681:                           NA       85000                    <NA>
-## 1682:                           NA          NA                    <NA>
+##       race gender               charges_citation housing_location
+##    1:   WH      M 720 ILCS 5 12-3.4(a)(2) [16145              05-
+##    2:   WH      M     720 ILCS 5 12-3.2 [930200]       05-L-2-1-2
+##    3:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416         08-2N-DR
+##    4:   WH      M 720 ILCS 5 12-3.2(a)(1) [10416       05-E-2-3-2
+##    5:   WH      M        720 ILCS 5 17-3 [11968]      11-BB-1-210
+##   ---                                                            
+## 1678:   WH      M            720 ILCS 5/32-10(a)       01-H-1-6-1
+## 1679:   WH      M                         38-9-1          15-EMAW
+## 1680:   WH      M                        38-19-3          15-EMAW
+## 1681:   WH      M                       56.5-704          15-EMAW
+## 1682:   WH      M                    95.5-11-501          15-DRAW
 ```
 
 ```r
 
-dat[CJ(c("WH", "W"))]
+## Notice that with two keys this no longer works:
+datSmall[J("WH", "W")]
 ```
 
 ```
-##       race               charges_citation age_at_booking gender
-##    1:    W   720 ILCS 5 16-3(a) [1025000]             27      F
-##    2:    W   625 ILCS 5 11-501(a) [14039]             24      F
-##    3:    W           625 ILCS 5/11-501(a)             21      F
-##    4:    W 720 ILCS 5 12-3.4(a)(1) [16128             34      M
-##    5:    W    625 ILCS 5 6-303(a) [13526]             34      M
-##   ---                                                          
-## 2055:   WH            720 ILCS 5/32-10(a)             50      M
-## 2056:   WH                         38-9-1             18      M
-## 2057:   WH                        38-19-3             32      M
-## 2058:   WH                       56.5-704             26      M
-## 2059:   WH                    95.5-11-501             31      M
-##              booking_date      jail_id bail_status housing_location
-##    1: 2012-10-31 00:00:00 2012-1031214     NO BOND      04-J-1-11-1
-##    2: 2012-12-15 03:10:58 2012-1011190          NA          17-SFFP
-##    3: 2012-07-02 00:00:00 2012-0702163          NA      17-WR-N-C-2
-##    4: 2013-01-19 00:00:00 2013-0119222          NA         08-2N-DR
-##    5: 2013-01-18 00:00:00 2013-0118220          NA      11-AH-3-411
-##   ---                                                              
-## 2055: 1996-12-18 00:00:00 1996-9683431     NO BOND       01-H-1-6-1
-## 2056: 1996-10-03 00:00:00 1996-9664677          NA          15-EMAW
-## 2057: 1996-07-12 00:00:00 1996-9644229          NA          15-EMAW
-## 2058: 1995-07-27 00:00:00 1995-9551250          NA          15-EMAW
-## 2059: 1995-05-09 00:00:00 1995-9532061     NO BOND          15-DRAW
-##                             charges bail_amount discharge_date_earliest
-##    1: THEFT/LABOR/SERVICES/PROPERTY          NA     2012-12-19 23:27:34
-##    2:                        DUI/6+      200000     2012-12-14 02:44:33
-##    3:     DUI/INTOXICATING COMPOUND       95000                    <NA>
-##    4:                            NA       50000                    <NA>
-##    5:      DRVG ON SUSP LICENSE/FTA       10000                    <NA>
-##   ---                                                                  
-## 2055:  VIO BAIL BOND/CLASS M CONVIC          NA                    <NA>
-## 2056:                            NA      100000                    <NA>
-## 2057:                            NA       15000                    <NA>
-## 2058:                            NA       85000                    <NA>
-## 2059:                            NA          NA                    <NA>
+##    race gender charges_citation housing_location
+## 1:   WH      W               NA               NA
 ```
 
 ```r
-dat[CJ(c("WH", "W"))]
+## Notice that with two keys, but this does:
+datSmall[J(c("WH", "W"))]
 ```
 
 ```
-##       race               charges_citation age_at_booking gender
-##    1:    W   720 ILCS 5 16-3(a) [1025000]             27      F
-##    2:    W   625 ILCS 5 11-501(a) [14039]             24      F
-##    3:    W           625 ILCS 5/11-501(a)             21      F
-##    4:    W 720 ILCS 5 12-3.4(a)(1) [16128             34      M
-##    5:    W    625 ILCS 5 6-303(a) [13526]             34      M
-##   ---                                                          
-## 2055:   WH            720 ILCS 5/32-10(a)             50      M
-## 2056:   WH                         38-9-1             18      M
-## 2057:   WH                        38-19-3             32      M
-## 2058:   WH                       56.5-704             26      M
-## 2059:   WH                    95.5-11-501             31      M
-##              booking_date      jail_id bail_status housing_location
-##    1: 2012-10-31 00:00:00 2012-1031214     NO BOND      04-J-1-11-1
-##    2: 2012-12-15 03:10:58 2012-1011190          NA          17-SFFP
-##    3: 2012-07-02 00:00:00 2012-0702163          NA      17-WR-N-C-2
-##    4: 2013-01-19 00:00:00 2013-0119222          NA         08-2N-DR
-##    5: 2013-01-18 00:00:00 2013-0118220          NA      11-AH-3-411
-##   ---                                                              
-## 2055: 1996-12-18 00:00:00 1996-9683431     NO BOND       01-H-1-6-1
-## 2056: 1996-10-03 00:00:00 1996-9664677          NA          15-EMAW
-## 2057: 1996-07-12 00:00:00 1996-9644229          NA          15-EMAW
-## 2058: 1995-07-27 00:00:00 1995-9551250          NA          15-EMAW
-## 2059: 1995-05-09 00:00:00 1995-9532061     NO BOND          15-DRAW
-##                             charges bail_amount discharge_date_earliest
-##    1: THEFT/LABOR/SERVICES/PROPERTY          NA     2012-12-19 23:27:34
-##    2:                        DUI/6+      200000     2012-12-14 02:44:33
-##    3:     DUI/INTOXICATING COMPOUND       95000                    <NA>
-##    4:                            NA       50000                    <NA>
-##    5:      DRVG ON SUSP LICENSE/FTA       10000                    <NA>
-##   ---                                                                  
-## 2055:  VIO BAIL BOND/CLASS M CONVIC          NA                    <NA>
-## 2056:                            NA      100000                    <NA>
-## 2057:                            NA       15000                    <NA>
-## 2058:                            NA       85000                    <NA>
-## 2059:                            NA          NA                    <NA>
+##       race gender               charges_citation housing_location
+##    1:   WH      F 720 ILCS 5 12-3.2(a)(2) [10418      04-Q-1-11-1
+##    2:   WH      F    720 ILCS 5 16A-3(a) [15601]      17-WR-N-A-2
+##    3:   WH      F  720 ILCS 5 16A-3(a) [1060000]      04-Q-1-17-1
+##    4:   WH      F   720 ILCS 5 11-14(a) [855900]      04-Q-1-19-2
+##    5:   WH      F 625 ILCS 5 11-501(a)(1) [14721      04-Q-1-16-1
+##   ---                                                            
+## 2055:    W      M              720 ILCS 550/5(g)       10-C-1-7-1
+## 2056:    W      M       720 ILCS 5/12-14.1(a)(1)          C DISCH
+## 2057:    W      M           720 ILCS 5/12-4.3(a)      11-DH-3-411
+## 2058:    W      M              720 ILCS 5/24-1.1      06-C-1-13-1
+## 2059:    W      M                  38-10-2(a)(3)      01-H-1-13-2
 ```
 
 

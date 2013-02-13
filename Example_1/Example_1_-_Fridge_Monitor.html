@@ -215,25 +215,43 @@ library(data.table)
 
 <h3>LIST AVAILABLE CSV FILES</h3>
 
-<pre><code class="r">## LIST FILES
-csvfiles = list.files(path = &quot;data logger results/&quot;, full.names = TRUE, pattern = &quot;[Cc][Ss][Vv]&quot;)
+<pre><code class="r">## The following line is needed to compile to HTML, please ignore
+if (basename(getwd()) != &quot;data.table_demo&quot;) {
+    setwd(&quot;..&quot;)
+}
+
+## LIST FILES
+csvfiles = list.files(path = &quot;data/data logger results/&quot;, full.names = TRUE, 
+    pattern = &quot;[Cc][Ss][Vv]&quot;)
 csvfiles
 </code></pre>
 
-<pre><code>##  [1] &quot;data logger results/LOGGER01.CSV&quot; &quot;data logger results/LOGGER02.CSV&quot;
-##  [3] &quot;data logger results/LOGGER03.CSV&quot; &quot;data logger results/LOGGER04.CSV&quot;
-##  [5] &quot;data logger results/LOGGER05.CSV&quot; &quot;data logger results/LOGGER06.CSV&quot;
-##  [7] &quot;data logger results/LOGGER07.CSV&quot; &quot;data logger results/LOGGER08.CSV&quot;
-##  [9] &quot;data logger results/LOGGER09.CSV&quot; &quot;data logger results/LOGGER10.CSV&quot;
-## [11] &quot;data logger results/LOGGER11.CSV&quot; &quot;data logger results/LOGGER12.CSV&quot;
-## [13] &quot;data logger results/LOGGER13.CSV&quot; &quot;data logger results/LOGGER14.CSV&quot;
+<pre><code>##  [1] &quot;data/data logger results/LOGGER01.CSV&quot;
+##  [2] &quot;data/data logger results/LOGGER02.CSV&quot;
+##  [3] &quot;data/data logger results/LOGGER03.CSV&quot;
+##  [4] &quot;data/data logger results/LOGGER04.CSV&quot;
+##  [5] &quot;data/data logger results/LOGGER05.CSV&quot;
+##  [6] &quot;data/data logger results/LOGGER06.CSV&quot;
+##  [7] &quot;data/data logger results/LOGGER07.CSV&quot;
+##  [8] &quot;data/data logger results/LOGGER08.CSV&quot;
+##  [9] &quot;data/data logger results/LOGGER09.CSV&quot;
+## [10] &quot;data/data logger results/LOGGER10.CSV&quot;
+## [11] &quot;data/data logger results/LOGGER11.CSV&quot;
+## [12] &quot;data/data logger results/LOGGER12.CSV&quot;
+## [13] &quot;data/data logger results/LOGGER13.CSV&quot;
+## [14] &quot;data/data logger results/LOGGER14.CSV&quot;
 </code></pre>
 
 <h3>READ IN FILES USING LAPPLY</h3>
 
 <p>Notice that all the files have different sizes</p>
 
-<pre><code class="r">dat = lapply(csvfiles, read.csv)
+<pre><code class="r">## The following line is needed to compile to HTML, please ignore
+if (basename(getwd()) != &quot;data.table_demo&quot;) {
+    setwd(&quot;..&quot;)
+}
+
+dat = lapply(csvfiles, read.csv)
 str(dat, 1)
 </code></pre>
 

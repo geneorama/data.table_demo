@@ -6,9 +6,9 @@
 
 ## Pictures of the device (for fun):
 
-<img src="resources/2013-01-28 02.46.11 (sm).jpg" align=middle height=150 width =235 />
-<img src="resources/2013-01-28 02.46.45 (sm).jpg" align=middle height=150 width =235 />
-<img src="resources/2013-01-28 02.46.54 (sm).jpg" align=middle height=150 width =235 />
+<img src="../resources/2013-01-28 02.46.11 (sm).jpg" align=middle height=150 width =235 />
+<img src="../resources/2013-01-28 02.46.45 (sm).jpg" align=middle height=150 width =235 />
+<img src="../resources/2013-01-28 02.46.54 (sm).jpg" align=middle height=150 width =235 />
 
 ## Introduction
 
@@ -40,19 +40,32 @@ library(data.table)
 
 
 ```r
+## The following line is needed to compile to HTML, please ignore
+if (basename(getwd()) != "data.table_demo") {
+    setwd("..")
+}
+
 ## LIST FILES
-csvfiles = list.files(path = "data logger results/", full.names = TRUE, pattern = "[Cc][Ss][Vv]")
+csvfiles = list.files(path = "data/data logger results/", full.names = TRUE, 
+    pattern = "[Cc][Ss][Vv]")
 csvfiles
 ```
 
 ```
-##  [1] "data logger results/LOGGER01.CSV" "data logger results/LOGGER02.CSV"
-##  [3] "data logger results/LOGGER03.CSV" "data logger results/LOGGER04.CSV"
-##  [5] "data logger results/LOGGER05.CSV" "data logger results/LOGGER06.CSV"
-##  [7] "data logger results/LOGGER07.CSV" "data logger results/LOGGER08.CSV"
-##  [9] "data logger results/LOGGER09.CSV" "data logger results/LOGGER10.CSV"
-## [11] "data logger results/LOGGER11.CSV" "data logger results/LOGGER12.CSV"
-## [13] "data logger results/LOGGER13.CSV" "data logger results/LOGGER14.CSV"
+##  [1] "data/data logger results/LOGGER01.CSV"
+##  [2] "data/data logger results/LOGGER02.CSV"
+##  [3] "data/data logger results/LOGGER03.CSV"
+##  [4] "data/data logger results/LOGGER04.CSV"
+##  [5] "data/data logger results/LOGGER05.CSV"
+##  [6] "data/data logger results/LOGGER06.CSV"
+##  [7] "data/data logger results/LOGGER07.CSV"
+##  [8] "data/data logger results/LOGGER08.CSV"
+##  [9] "data/data logger results/LOGGER09.CSV"
+## [10] "data/data logger results/LOGGER10.CSV"
+## [11] "data/data logger results/LOGGER11.CSV"
+## [12] "data/data logger results/LOGGER12.CSV"
+## [13] "data/data logger results/LOGGER13.CSV"
+## [14] "data/data logger results/LOGGER14.CSV"
 ```
 
 
@@ -62,6 +75,11 @@ Notice that all the files have different sizes
 
 
 ```r
+## The following line is needed to compile to HTML, please ignore
+if (basename(getwd()) != "data.table_demo") {
+    setwd("..")
+}
+
 dat = lapply(csvfiles, read.csv)
 str(dat, 1)
 ```

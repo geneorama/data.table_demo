@@ -11,18 +11,19 @@ This code was used to demonstrate the features of the data.table package at the 
 
 The data and project related to this exmaple comes from another meetup and code project.  I attended that meetup, and put together some simple visualizations for inspiration.  These visualizations were intended to be used as talking points for the project.  I repurposed this data to provide some `data.table` examples.
 
-Meetup group: http://www.meetup.com/The-Chicago-Data-Visualization-Group/events/97690642/
-Github project related to meetup: https://github.com/sc3/26thandcalifornia
-My related project: https://github.com/geneorama/26_and_California
+Meetup group: http://www.meetup.com/The-Chicago-Data-Visualization-Group/events/97690642/ <br>
+Github project related to meetup: https://github.com/sc3/26thandcalifornia <br>
+My related project: https://github.com/geneorama/26_and_California <br>
 
-Exmples complied using `knitr`:
-Original meetup example: http://chicagodatascience.com/public/26th_and_California_example_visualizations.html
-This example: 
+Exmples complied using `knitr`: <br>
+Original meetup example: http://chicagodatascience.com/public/26th_and_California_example_visualizations.html <br>
 
 
 ## INITIALIZE
 ```{r}
-# source('00 Initialize.R')
+## The following line is needed to compile to HTML, please ignore
+if (basename(getwd()) != "data.table_demo") {setwd("..")}
+
 rm(list=ls())
 library(data.table)
 library(ggplot2)
@@ -37,8 +38,11 @@ This csv contains raw data collected from the Cook Count Sherrif's website.  It 
 
 
 ```{r}
+## The following line is needed to compile to HTML, please ignore
+if (basename(getwd()) != "data.table_demo") {setwd("..")}
+
 rawdat = read.table(
-	file = 'Database 2013-01-21 (8zQ4cW7T).csv', 
+	file = 'data/Database 2013-01-21 (8zQ4cW7T).csv', 
 	sep=',', quote='"', flush=FALSE, 
 	header=TRUE, nrows=-1, fill=FALSE, 
 	stringsAsFactors=FALSE,
@@ -60,7 +64,7 @@ dat[ , discharge_date_earliest := ExtractIsoTime(dat$discharge_date_earliest)]
 ```
 
 
-# Examples with data.table
+## Examples of grouping with data.table
 
 ```{r}
 
@@ -81,11 +85,14 @@ dat[ , .N, keyby = bail_amount]
 
 ## Summary by race
 dat[ , .N, by=race]
+```
 
-#############################################
-## SUBSETTING:
-#############################################
 
+## Examples of subsetting with data.table
+
+This is probably the most confusing thing at first
+
+```{r}
 ## WRONG WAY:
 dat[ , 3]
 dat[ , 'race']
@@ -104,12 +111,15 @@ df = as.data.frame(dat)
 df[1,]
 
 
+```
 
-#############################################
-## AGGREGATING:
-#############################################
+## Examples of grouping and aggregating with data.table
 
-## Grouping is simple, but...
+This is very fast, and very useful for generating any kind of summary statistics.
+
+```{r}
+
+## Grouping is simple
 dat[ , mean(age_at_booking), by=race]
 dat[ , age_at_booking, by=race]
 dat[ 
@@ -119,9 +129,15 @@ dat[
 		sd = sd(age_at_booking)
 		), 
 	by = race]
+```
 
-## Sometimes things happen that you may not expect
-## It's good, but possibly a surprise
+## Examples of grouping and aggregating with data.table
+
+But look at what happens here!
+
+Sometimes things happen that you may not expect. It's good, but possibly a surprise. By including `age_at_booking` without any aggregating function, it automatically expands the data.table result
+
+```{r}
 dat[ 
 	i = TRUE, 
 	j = list(
@@ -132,11 +148,9 @@ dat[
 	by = race]
 ```
 
-# Complex query example
+### Complex query example
 
-```{r}
-NAsummary(dat)
-
+```{r, tidy=FALSE}
 mysummary = dat[
 	i = !is.na(charges) &
 		!is.na(booking_date) &
@@ -152,34 +166,86 @@ mysummary = dat[
 	by = list(race,gender,age_at_booking)
 	]
 mysummary
+
+## Uncomment to open summary as csv file, in Excel probably
 # wtf(mysummary)
+```
+
+***
+<br>
+<br>
+## NOTE: FOR THE REST OF THE EXAMPLES I'M GOING TO USE FEWER COLUMNS, JUST BECAUSE IT GETS VERY VERBOSE TO PRINT EVERYTHING
+<br>
+<br>
+```{r}
+datSmall = dat[,list(race, gender, charges_citation, housing_location)]
 ```
 
 
 # J and CJ
 
+Here are some examples of how to use (and not use) the Join (J) and Cross Join (CJ)
+
+Personally, I rarely used these functions at first.  I found it easier to give up some performance for simplicity. 
+
+
 ```{r}
 
-dat[ , .N, by=race]
+## Count of observations by race
+datSmall[ , .N, by=race]
 
-setkey(dat, "race")
-dat['W']
-dat[J('W')]
-dat[J(c('W', 'WH'))]
+## Set the key to be "race"", and do some joins
+setkey(datSmall, "race")
 
-setkeyv(dat, c("race", "gender"))
-dat[c('W', 'WH')]
-dat[c('W', 'M')]
-dat[data.table('WH', 'M')]
+## Simple inner Join, new syntax (and what I normally use)
+datSmall['W']
+## Simple inner Join, old syntax
+datSmall[J('W')]
+## You can select more than one key
+datSmall[J(c('W', 'WH'))]
+##   This still works
+datSmall[c('W', 'WH')]
+```
 
-dat[J('WH', 'M')]
-dat[CJ('WH', 'M')]
+## Examples with two keys: `race` and `gender`
+```{r}
+## Set the key
+setkeyv(datSmall, c("race", "gender"))
+```
 
-dat[J(c('W', 'WH'))]
-dat[CJ('WH', 'M')]
+Let's get records where race == "WH" and gender == "M"
+There should be 1682 records of that sort based on this table:
+```{r}
+datSmall[,.N,keyby=list(race, gender)]
+```
 
-dat[CJ(c('WH', 'W'))]
-dat[CJ(c('WH', 'W'))]
+## Try using J and CJ on two keys
+
+```{r}
+## This is the first way that I would have guessed to 
+## get results for "white" and "male", but it doesn't work:
+datSmall[c('WH', 'M')]
+## If I add the summary using .N, you can see that 
+## it also selects Females (and returns 1 NA):
+datSmall[c('WH', 'M')][,.N,list(race,gender)]
+
+## This one works.
+datSmall[data.table('WH', 'M')]
+datSmall[data.table('WH', 'M')][,.N,list(race,gender)]
+
+## But it's a little sloppy because you're actually
+## making this data table, and then 
+## joining it with the master data:
+data.table('WH', 'M')
+
+## This is the right way to do it.
+datSmall[J('WH', 'M')]
+datSmall[CJ('WH', 'M')]
+
+## Notice that with two keys this no longer works:
+datSmall[J('WH', 'W')]
+## Notice that with two keys, but this does:
+datSmall[J(c('WH', 'W'))]
 
 ```
 
