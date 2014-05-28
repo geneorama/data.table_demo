@@ -3,6 +3,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=9" >
 
 <title>Data table examples using public data</title>
 
@@ -198,12 +199,13 @@ Original meetup example: <a href="http://chicagodatascience.com/public/26th_and_
 
 <h2>INITIALIZE</h2>
 
-<pre><code class="r">## The following line is needed to compile to HTML, please ignore
-if (basename(getwd()) != &quot;data.table_demo&quot;) {
-    setwd(&quot;..&quot;)
-}
+<pre><code class="r">opts_chunk$set(tidy = FALSE)
+</code></pre>
 
-rm(list = ls())
+<pre><code class="r">## The following line is needed to compile to HTML, please ignore
+if (basename(getwd()) != &quot;data.table_demo&quot;) {setwd(&quot;..&quot;)}
+
+rm(list=ls())
 library(data.table)
 library(ggplot2)
 source(&quot;functions/ExtractIsoTime.R&quot;)
@@ -216,13 +218,13 @@ source(&quot;functions/NAsummary.R&quot;)
 <p>This csv contains raw data collected from the Cook Count Sherrif&#39;s website.  It was downloaded using a web scraping utility maintained here: <a href="https://github.com/sc3/cookcountyjail">https://github.com/sc3/cookcountyjail</a></p>
 
 <pre><code class="r">## The following line is needed to compile to HTML, please ignore
-if (basename(getwd()) != &quot;data.table_demo&quot;) {
-    setwd(&quot;..&quot;)
-}
+if (basename(getwd()) != &quot;data.table_demo&quot;) {setwd(&quot;..&quot;)}
 
-rawdat = read.table(file = &quot;data/Database 2013-01-21 (8zQ4cW7T).csv&quot;, sep = &quot;,&quot;, 
-    quote = &quot;\&quot;&quot;, flush = FALSE, header = TRUE, nrows = -1, fill = FALSE, stringsAsFactors = FALSE, 
-    na.strings = c(&quot;None&quot;, &quot;&quot;))
+rawdat = read.table(file = &#39;data/Database 2013-01-21 (8zQ4cW7T).csv&#39;, 
+                    sep=&#39;,&#39;, quote=&#39;&quot;&#39;, flush=FALSE, 
+                    header=TRUE, nrows=-1, fill=FALSE, 
+                    stringsAsFactors=FALSE,
+                    na.strings=c(&#39;None&#39;, &#39;&#39;))
 
 str(rawdat)
 </code></pre>
@@ -265,7 +267,7 @@ str(dat)
 <p>This relies on a simple function I wrote called <code>ExtractIsoTime</code> (which is in the functions folder).   The thing to notice here is that when you create new columns using <code>data.table</code> you use <code>:=</code> to denote assignment.</p>
 
 <pre><code class="r">## EXAMPLE FORMAT: 2012-12-30T20:57:19.616186
-dat[, `:=`(booking_date, ExtractIsoTime(dat$booking_date))]
+dat[ , booking_date := ExtractIsoTime(dat$booking_date)]
 </code></pre>
 
 <pre><code>##                      charges_citation race age_at_booking gender
@@ -306,7 +308,7 @@ dat[, `:=`(booking_date, ExtractIsoTime(dat$booking_date))]
 ## 19207:      100000                      NA
 </code></pre>
 
-<pre><code class="r">dat[, `:=`(discharge_date_earliest, ExtractIsoTime(dat$discharge_date_earliest))]
+<pre><code class="r">dat[ , discharge_date_earliest := ExtractIsoTime(dat$discharge_date_earliest)]
 </code></pre>
 
 <pre><code>##                      charges_citation race age_at_booking gender
@@ -372,7 +374,8 @@ NAsummary(dat)
 
 <pre><code class="r">
 
-## Summary by bail amount the old way: (Don&#39;t forget the useNA argument!!)
+## Summary by bail amount the old way:
+## (Don&#39;t forget the useNA argument!!)
 table(dat$bail_amount)
 </code></pre>
 
@@ -407,7 +410,7 @@ table(dat$bail_amount)
 ##      18
 </code></pre>
 
-<pre><code class="r">table(dat$bail_amount, useNA = &quot;ifany&quot;)  # almost forgot
+<pre><code class="r">table(dat$bail_amount, useNA=&#39;ifany&#39;) # almost forgot
 </code></pre>
 
 <pre><code>## 
@@ -443,7 +446,7 @@ table(dat$bail_amount)
 
 <pre><code class="r">
 ## Summary by bail amount Data Table
-dat[, .N, by = bail_amount]
+dat[ , .N, by = bail_amount]
 </code></pre>
 
 <pre><code>##      bail_amount    N
@@ -460,7 +463,7 @@ dat[, .N, by = bail_amount]
 ## 119:       13000    1
 </code></pre>
 
-<pre><code class="r">dat[, .N, keyby = bail_amount]
+<pre><code class="r">dat[ , .N, keyby = bail_amount]
 </code></pre>
 
 <pre><code>##      bail_amount    N
@@ -479,7 +482,7 @@ dat[, .N, by = bail_amount]
 
 <pre><code class="r">
 ## Summary by race
-dat[, .N, by = race]
+dat[ , .N, by=race]
 </code></pre>
 
 <pre><code>##    race     N
@@ -499,13 +502,13 @@ dat[, .N, by = race]
 <p>This is probably the most confusing thing at first</p>
 
 <pre><code class="r">## WRONG WAY:
-dat[, 3]
+dat[ , 3]
 </code></pre>
 
 <pre><code>## [1] 3
 </code></pre>
 
-<pre><code class="r">dat[, &quot;race&quot;]
+<pre><code class="r">dat[ , &#39;race&#39;]
 </code></pre>
 
 <pre><code>## [1] &quot;race&quot;
@@ -513,13 +516,13 @@ dat[, 3]
 
 <pre><code class="r">
 ## RIGHT WAY:
-dat[1:10, race]
+dat[1:10 , race] 
 </code></pre>
 
 <pre><code>##  [1] &quot;WH&quot; &quot;LW&quot; &quot;BK&quot; &quot;BK&quot; &quot;LW&quot; &quot;BK&quot; &quot;BK&quot; &quot;BK&quot; &quot;LW&quot; &quot;BK&quot;
 </code></pre>
 
-<pre><code class="r">dat[1:10, 3, with = F]
+<pre><code class="r">dat[1:10 , 3, with = F]
 </code></pre>
 
 <pre><code>##     age_at_booking
@@ -537,7 +540,7 @@ dat[1:10, race]
 
 <pre><code class="r">
 
-## Indexing works differently
+## Indexing works differently 
 dat[1]
 </code></pre>
 
@@ -553,7 +556,7 @@ dat[1]
 ## DF:
 df = as.data.frame(dat)
 # df[1]
-df[1, ]
+df[1,]
 </code></pre>
 
 <pre><code>##                 charges_citation race age_at_booking gender booking_date
@@ -573,7 +576,7 @@ df[1, ]
 
 <pre><code class="r">
 ## Grouping is simple
-dat[, mean(age_at_booking), by = race]
+dat[ , mean(age_at_booking), by=race]
 </code></pre>
 
 <pre><code>##    race    V1
@@ -588,7 +591,8 @@ dat[, mean(age_at_booking), by = race]
 ## 9:   IN 27.00
 </code></pre>
 
-<pre><code class="r">dat[, age_at_booking, by = race]
+<pre><code class="r">
+dat[ , age_at_booking, by=race]
 </code></pre>
 
 <pre><code>##        race age_at_booking
@@ -605,7 +609,10 @@ dat[, mean(age_at_booking), by = race]
 ## 19207:   IN             18
 </code></pre>
 
-<pre><code class="r">dat[i = TRUE, j = list(mean = mean(age_at_booking), sd = sd(age_at_booking)), 
+<pre><code class="r">
+dat[i = TRUE, 
+    j = list(mean = mean(age_at_booking),
+             sd = sd(age_at_booking)), 
     by = race]
 </code></pre>
 
@@ -627,8 +634,11 @@ dat[, mean(age_at_booking), by = race]
 
 <p>Sometimes things happen that you may not expect. It&#39;s good, but possibly a surprise. By including <code>age_at_booking</code> without any aggregating function, it automatically expands the data.table result</p>
 
-<pre><code class="r">dat[i = TRUE, j = list(mean = mean(age_at_booking), sd = sd(age_at_booking), 
-    age_at_booking), by = race]
+<pre><code class="r">dat[i = TRUE, 
+    j = list(mean = mean(age_at_booking),
+             sd = sd(age_at_booking),
+             age_at_booking), 
+    by = race]
 </code></pre>
 
 <pre><code>##        race  mean    sd age_at_booking
@@ -647,20 +657,17 @@ dat[, mean(age_at_booking), by = race]
 
 <h3>Complex query example</h3>
 
-<pre><code class="r">mysummary = dat[
-    i = !is.na(charges) &amp;
-        !is.na(booking_date) &amp;
-        !is.na(bail_amount),
-    j = list(
-        count = .N,
-        coverage = diff(range(booking_date)),
-        bailave = mean(bail_amount),
-        bailsd = sd(bail_amount),
-        bailmin = min(bail_amount),
-        bailmax = max(bail_amount)
-        ),
-    by = list(race,gender,age_at_booking)
-    ]
+<pre><code class="r">mysummary = dat[i = !is.na(charges) &amp;
+                    !is.na(booking_date) &amp;
+                    !is.na(bail_amount),
+                j = list(count = .N,
+                         coverage = diff(range(booking_date)),
+                         bailave = mean(bail_amount),
+                         bailsd = sd(bail_amount),
+                         bailmin = min(bail_amount),
+                         bailmax = max(bail_amount)),
+                by = list(race,gender,
+                          age_at_booking)]
 mysummary
 </code></pre>
 
@@ -705,7 +712,7 @@ mysummary
 <p><br>
 <br></p>
 
-<pre><code class="r">datSmall = dat[, list(race, gender, charges_citation, housing_location)]
+<pre><code class="r">datSmall = dat[,list(race, gender, charges_citation, housing_location)]
 </code></pre>
 
 <h1>J and CJ</h1>
@@ -716,7 +723,7 @@ mysummary
 
 <pre><code class="r">
 ## Count of observations by race
-datSmall[, .N, by = race]
+datSmall[ , .N, by=race]
 </code></pre>
 
 <pre><code>##    race     N
@@ -732,11 +739,11 @@ datSmall[, .N, by = race]
 </code></pre>
 
 <pre><code class="r">
-## Set the key to be &#39;race&#39;&#39;, and do some joins
+## Set the key to be &quot;race&quot;&quot;, and do some joins
 setkey(datSmall, &quot;race&quot;)
 
 ## Simple inner Join, new syntax (and what I normally use)
-datSmall[&quot;W&quot;]
+datSmall[&#39;W&#39;]
 </code></pre>
 
 <pre><code>##     race gender               charges_citation housing_location
@@ -788,7 +795,7 @@ datSmall[&quot;W&quot;]
 </code></pre>
 
 <pre><code class="r">## Simple inner Join, old syntax
-datSmall[J(&quot;W&quot;)]
+datSmall[J(&#39;W&#39;)]
 </code></pre>
 
 <pre><code>##     race gender               charges_citation housing_location
@@ -840,7 +847,7 @@ datSmall[J(&quot;W&quot;)]
 </code></pre>
 
 <pre><code class="r">## You can select more than one key
-datSmall[J(c(&quot;W&quot;, &quot;WH&quot;))]
+datSmall[J(c(&#39;W&#39;, &#39;WH&#39;))]
 </code></pre>
 
 <pre><code>##       race gender               charges_citation housing_location
@@ -857,8 +864,8 @@ datSmall[J(c(&quot;W&quot;, &quot;WH&quot;))]
 ## 2059:   WH      M                    95.5-11-501          15-DRAW
 </code></pre>
 
-<pre><code class="r">## This still works
-datSmall[c(&quot;W&quot;, &quot;WH&quot;)]
+<pre><code class="r">##   This still works
+datSmall[c(&#39;W&#39;, &#39;WH&#39;)]
 </code></pre>
 
 <pre><code>##       race gender               charges_citation housing_location
@@ -884,7 +891,7 @@ setkeyv(datSmall, c(&quot;race&quot;, &quot;gender&quot;))
 <p>Let&#39;s get records where race == &ldquo;WH&rdquo; and gender == &ldquo;M&rdquo;
 There should be 1682 records of that sort based on this table:</p>
 
-<pre><code class="r">datSmall[, .N, keyby = list(race, gender)]
+<pre><code class="r">datSmall[,.N,keyby=list(race, gender)]
 </code></pre>
 
 <pre><code>##     race gender     N
@@ -910,9 +917,9 @@ There should be 1682 records of that sort based on this table:</p>
 
 <h2>Try using J and CJ on two keys</h2>
 
-<pre><code class="r">## This is the first way that I would have guessed to get results for
-## &#39;white&#39; and &#39;male&#39;, but it doesn&#39;t work:
-datSmall[c(&quot;WH&quot;, &quot;M&quot;)]
+<pre><code class="r">## This is the first way that I would have guessed to 
+## get results for &quot;white&quot; and &quot;male&quot;, but it doesn&#39;t work:
+datSmall[c(&#39;WH&#39;, &#39;M&#39;)]
 </code></pre>
 
 <pre><code>##       race gender               charges_citation housing_location
@@ -929,9 +936,9 @@ datSmall[c(&quot;WH&quot;, &quot;M&quot;)]
 ## 2016:    M     NA                             NA               NA
 </code></pre>
 
-<pre><code class="r">## If I add the summary using .N, you can see that it also selects Females
-## (and returns 1 NA):
-datSmall[c(&quot;WH&quot;, &quot;M&quot;)][, .N, list(race, gender)]
+<pre><code class="r">## If I add the summary using .N, you can see that 
+## it also selects Females (and returns 1 NA):
+datSmall[c(&#39;WH&#39;, &#39;M&#39;)][,.N,list(race,gender)]
 </code></pre>
 
 <pre><code>##    race gender    N
@@ -942,7 +949,7 @@ datSmall[c(&quot;WH&quot;, &quot;M&quot;)][, .N, list(race, gender)]
 
 <pre><code class="r">
 ## This one works.
-datSmall[data.table(&quot;WH&quot;, &quot;M&quot;)]
+datSmall[data.table(&#39;WH&#39;, &#39;M&#39;)]
 </code></pre>
 
 <pre><code>##       race gender               charges_citation housing_location
@@ -959,7 +966,7 @@ datSmall[data.table(&quot;WH&quot;, &quot;M&quot;)]
 ## 1682:   WH      M                    95.5-11-501          15-DRAW
 </code></pre>
 
-<pre><code class="r">datSmall[data.table(&quot;WH&quot;, &quot;M&quot;)][, .N, list(race, gender)]
+<pre><code class="r">datSmall[data.table(&#39;WH&#39;, &#39;M&#39;)][,.N,list(race,gender)]
 </code></pre>
 
 <pre><code>##    race gender    N
@@ -967,18 +974,19 @@ datSmall[data.table(&quot;WH&quot;, &quot;M&quot;)]
 </code></pre>
 
 <pre><code class="r">
-## But it&#39;s a little sloppy because you&#39;re actually making this data
-## table, and then joining it with the master data:
-data.table(&quot;WH&quot;, &quot;M&quot;)
+## But it&#39;s a little sloppy because you&#39;re actually
+## making this data table, and then 
+## joining it with the master data:
+data.table(&#39;WH&#39;, &#39;M&#39;)
 </code></pre>
 
-<pre><code>##    WH M
-## 1: WH M
+<pre><code>##    V1 V2
+## 1: WH  M
 </code></pre>
 
 <pre><code class="r">
 ## This is the right way to do it.
-datSmall[J(&quot;WH&quot;, &quot;M&quot;)]
+datSmall[J(&#39;WH&#39;, &#39;M&#39;)]
 </code></pre>
 
 <pre><code>##       race gender               charges_citation housing_location
@@ -995,7 +1003,7 @@ datSmall[J(&quot;WH&quot;, &quot;M&quot;)]
 ## 1682:   WH      M                    95.5-11-501          15-DRAW
 </code></pre>
 
-<pre><code class="r">datSmall[CJ(&quot;WH&quot;, &quot;M&quot;)]
+<pre><code class="r">datSmall[CJ(&#39;WH&#39;, &#39;M&#39;)]
 </code></pre>
 
 <pre><code>##       race gender               charges_citation housing_location
@@ -1014,7 +1022,7 @@ datSmall[J(&quot;WH&quot;, &quot;M&quot;)]
 
 <pre><code class="r">
 ## Notice that with two keys this no longer works:
-datSmall[J(&quot;WH&quot;, &quot;W&quot;)]
+datSmall[J(&#39;WH&#39;, &#39;W&#39;)]
 </code></pre>
 
 <pre><code>##    race gender charges_citation housing_location
@@ -1022,7 +1030,7 @@ datSmall[J(&quot;WH&quot;, &quot;W&quot;)]
 </code></pre>
 
 <pre><code class="r">## Notice that with two keys, but this does:
-datSmall[J(c(&quot;WH&quot;, &quot;W&quot;))]
+datSmall[J(c(&#39;WH&#39;, &#39;W&#39;))]
 </code></pre>
 
 <pre><code>##       race gender               charges_citation housing_location

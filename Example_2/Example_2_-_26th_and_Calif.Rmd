@@ -20,6 +20,11 @@ Original meetup example: http://chicagodatascience.com/public/26th_and_Californi
 
 
 ## INITIALIZE
+
+```{r, cache=FALSE}
+opts_chunk$set(tidy=FALSE)
+```
+
 ```{r}
 ## The following line is needed to compile to HTML, please ignore
 if (basename(getwd()) != "data.table_demo") {setwd("..")}
@@ -41,12 +46,11 @@ This csv contains raw data collected from the Cook Count Sherrif's website.  It 
 ## The following line is needed to compile to HTML, please ignore
 if (basename(getwd()) != "data.table_demo") {setwd("..")}
 
-rawdat = read.table(
-	file = 'data/Database 2013-01-21 (8zQ4cW7T).csv', 
-	sep=',', quote='"', flush=FALSE, 
-	header=TRUE, nrows=-1, fill=FALSE, 
-	stringsAsFactors=FALSE,
-	na.strings=c('None', ''))
+rawdat = read.table(file = 'data/Database 2013-01-21 (8zQ4cW7T).csv', 
+					sep=',', quote='"', flush=FALSE, 
+					header=TRUE, nrows=-1, fill=FALSE, 
+					stringsAsFactors=FALSE,
+					na.strings=c('None', ''))
 
 str(rawdat)
 dat = as.data.table(rawdat)
@@ -121,13 +125,12 @@ This is very fast, and very useful for generating any kind of summary statistics
 
 ## Grouping is simple
 dat[ , mean(age_at_booking), by=race]
+
 dat[ , age_at_booking, by=race]
-dat[ 
-	i = TRUE, 
-	j = list(
-		mean = mean(age_at_booking),
-		sd = sd(age_at_booking)
-		), 
+
+dat[i = TRUE, 
+	j = list(mean = mean(age_at_booking),
+			 sd = sd(age_at_booking)), 
 	by = race]
 ```
 
@@ -138,33 +141,27 @@ But look at what happens here!
 Sometimes things happen that you may not expect. It's good, but possibly a surprise. By including `age_at_booking` without any aggregating function, it automatically expands the data.table result
 
 ```{r}
-dat[ 
-	i = TRUE, 
-	j = list(
-		mean = mean(age_at_booking),
-		sd = sd(age_at_booking),
-		age_at_booking
-		), 
+dat[i = TRUE, 
+	j = list(mean = mean(age_at_booking),
+			 sd = sd(age_at_booking),
+			 age_at_booking), 
 	by = race]
 ```
 
 ### Complex query example
 
 ```{r, tidy=FALSE}
-mysummary = dat[
-	i = !is.na(charges) &
-		!is.na(booking_date) &
-		!is.na(bail_amount),
-	j = list(
-		count = .N,
-		coverage = diff(range(booking_date)),
-		bailave = mean(bail_amount),
-		bailsd = sd(bail_amount),
-		bailmin = min(bail_amount),
-		bailmax = max(bail_amount)
-		),
-	by = list(race,gender,age_at_booking)
-	]
+mysummary = dat[i = !is.na(charges) &
+					!is.na(booking_date) &
+					!is.na(bail_amount),
+				j = list(count = .N,
+						 coverage = diff(range(booking_date)),
+						 bailave = mean(bail_amount),
+						 bailsd = sd(bail_amount),
+						 bailmin = min(bail_amount),
+						 bailmax = max(bail_amount)),
+				by = list(race,gender,
+						  age_at_booking)]
 mysummary
 
 ## Uncomment to open summary as csv file, in Excel probably

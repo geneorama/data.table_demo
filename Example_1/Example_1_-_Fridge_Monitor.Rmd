@@ -29,6 +29,10 @@ Although this isn't the most exciting example in the world, it does show some ni
 
 ### INITIALIZE
 
+```{r, cache=FALSE}
+opts_chunk$set(tidy=FALSE)
+```
+
 ```{r}
 rm(list=ls())
 library(data.table)
@@ -41,10 +45,9 @@ library(data.table)
 if (basename(getwd()) != "data.table_demo") {setwd("..")}
 
 ## LIST FILES
-csvfiles = list.files(
-	path = 'data/data logger results/', 
-	full.names=TRUE,
-	pattern = "[Cc][Ss][Vv]")
+csvfiles = list.files(path = 'data/data logger results/', 
+					  full.names=TRUE,
+					  pattern = "[Cc][Ss][Vv]")
 csvfiles
 ```
 
@@ -109,12 +112,14 @@ plot(seconds ~ indx,
 	 main = 'Time index by file')
 
 ## Seeing how many starts we had, when seconds==1
-datAll[ seconds==1]
+datAll[seconds==1]
 
 ## This shows us that it was the first element
 ## that had "seconds" == 1 when we group
 ## the data by "file"
-datAll[ ,  j=which(seconds==1), by=file]
+datAll[i = TRUE,
+	   j = which(seconds==1), 
+	   by = file]
 
 ## The .N is very useful!!
 ## Totals by file
@@ -130,11 +135,11 @@ I'm going to do the query the old way, using data frames, then using data tables
 
 ```{r}
 ## Data frame approach 1
-with(datAll, tapply(seconds,file,range))
+with(datAll, tapply(seconds, file, range))
 
 ## Data frame approach 2  (cleaned up)
 do.call(rbind, 
-		with(datAll, tapply(seconds,file,range)))
+		with(datAll, tapply(seconds, file, range)))
 
 ## Data table approach 1 (very simple)
 datAll[ , range(seconds), by=file]
@@ -143,22 +148,18 @@ datAll[ , range(seconds), by=file]
 datAll[ , list(min(seconds), max(seconds)), by=file]
 
 ## Data table approach 3
-datAll[ 
-	i = TRUE, 
-	j = list(
-		min = min(seconds), 
-		max = max(seconds)), 
-	by = file]
+datAll[i = TRUE, 
+	   j = list(min = min(seconds), 
+	   		    max = max(seconds)), 
+	   by = file]
 ```
 
 Notice that after cleaning up the code I ended up with something that seems a little verbose:
 ```{r, eval=FALSE}
-datAll[ 
-	i = TRUE, 
-	j = list(
-		min = min(seconds), 
-		max = max(seconds)), 
-	by = file]
+datAll[i = TRUE, 
+	   j = list(min = min(seconds), 
+	   		    max = max(seconds)), 
+	   by = file]
 ```
 
 To make a nice table the old way it takes several steps.  I would argue that the data.table solution is much more readable than either of these (and it's definitely much faster):

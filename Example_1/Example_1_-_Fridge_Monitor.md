@@ -31,7 +31,13 @@ Although this isn't the most exciting example in the world, it does show some ni
 
 
 ```r
-rm(list = ls())
+opts_chunk$set(tidy = FALSE)
+```
+
+
+
+```r
+rm(list=ls())
 library(data.table)
 ```
 
@@ -41,13 +47,12 @@ library(data.table)
 
 ```r
 ## The following line is needed to compile to HTML, please ignore
-if (basename(getwd()) != "data.table_demo") {
-    setwd("..")
-}
+if (basename(getwd()) != "data.table_demo") {setwd("..")}
 
 ## LIST FILES
-csvfiles = list.files(path = "data/data logger results/", full.names = TRUE, 
-    pattern = "[Cc][Ss][Vv]")
+csvfiles = list.files(path = 'data/data logger results/', 
+					  full.names=TRUE,
+					  pattern = "[Cc][Ss][Vv]")
 csvfiles
 ```
 
@@ -76,9 +81,7 @@ Notice that all the files have different sizes
 
 ```r
 ## The following line is needed to compile to HTML, please ignore
-if (basename(getwd()) != "data.table_demo") {
-    setwd("..")
-}
+if (basename(getwd()) != "data.table_demo") {setwd("..")}
 
 dat = lapply(csvfiles, read.csv)
 str(dat, 1)
@@ -104,8 +107,8 @@ str(dat, 1)
 
 ```r
 ## ADD FILE NAME
-for (i in 1:length(csvfiles)) {
-    dat[[i]]$file = basename(csvfiles[i])
+for(i in 1:length(csvfiles)) {
+	dat[[i]]$file = basename(csvfiles[i])
 }
 str(dat, 1)
 ```
@@ -166,8 +169,8 @@ datAll
 
 
 ```r
-## Change to 'seconds'
-setnames(datAll, "millis.1000", "seconds")
+## Change to "seconds"
+setnames(datAll, 'millis.1000', 'seconds')
 colnames(datAll)
 ```
 
@@ -177,9 +180,10 @@ colnames(datAll)
 
 ```r
 
-## NOTE: The alternative expression still works (with a warning), if you
-## prefer.  But who wants to read that??
-## colnames(datAll)[which(colnames(datAll)=='millis.1000')] = 'seconds'
+## NOTE:
+## The alternative expression still works (with a warning), if you prefer.
+## But who wants to read that??
+# colnames(datAll)[which(colnames(datAll)=='millis.1000')] = 'seconds'
 ```
 
 
@@ -190,18 +194,22 @@ First, let's look at some simple plots and tables to make sure that we know what
 
 
 ```r
-## Plot to see what the index values look like Seems like each file starts
-## at one and marches through time linearly... which is what it should do.
+## Plot to see what the index values look like
+## Seems like each file starts at one and marches 
+## through time linearly... which is what it should do.
 indx = 1:nrow(datAll)
-plot(seconds ~ indx, data = datAll, col = factor(file), main = "Time index by file")
+plot(seconds ~ indx, 
+	 data = datAll, 
+	 col = factor(file),
+	 main = 'Time index by file')
 ```
 
-![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7.png) 
+![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8.png) 
 
 ```r
 
 ## Seeing how many starts we had, when seconds==1
-datAll[seconds == 1]
+datAll[seconds==1]
 ```
 
 ```
@@ -224,9 +232,12 @@ datAll[seconds == 1]
 
 ```r
 
-## This shows us that it was the first element that had 'seconds' == 1
-## when we group the data by 'file'
-datAll[, j = which(seconds == 1), by = file]
+## This shows us that it was the first element
+## that had "seconds" == 1 when we group
+## the data by "file"
+datAll[i = TRUE,
+	   j = which(seconds==1), 
+	   by = file]
 ```
 
 ```
@@ -249,8 +260,9 @@ datAll[, j = which(seconds == 1), by = file]
 
 ```r
 
-## The .N is very useful!!  Totals by file
-datAll[, .N, by = file]
+## The .N is very useful!!
+## Totals by file
+datAll[ , .N, by=file]
 ```
 
 ```
@@ -331,8 +343,9 @@ with(datAll, tapply(seconds, file, range))
 
 ```r
 
-## Data frame approach 2 (cleaned up)
-do.call(rbind, with(datAll, tapply(seconds, file, range)))
+## Data frame approach 2  (cleaned up)
+do.call(rbind, 
+		with(datAll, tapply(seconds, file, range)))
 ```
 
 ```
@@ -356,7 +369,7 @@ do.call(rbind, with(datAll, tapply(seconds, file, range)))
 ```r
 
 ## Data table approach 1 (very simple)
-datAll[, range(seconds), by = file]
+datAll[ , range(seconds), by=file]
 ```
 
 ```
@@ -395,7 +408,7 @@ datAll[, range(seconds), by = file]
 ```r
 
 ## Data table approach 2
-datAll[, list(min(seconds), max(seconds)), by = file]
+datAll[ , list(min(seconds), max(seconds)), by=file]
 ```
 
 ```
@@ -419,7 +432,10 @@ datAll[, list(min(seconds), max(seconds)), by = file]
 ```r
 
 ## Data table approach 3
-datAll[i = TRUE, j = list(min = min(seconds), max = max(seconds)), by = file]
+datAll[i = TRUE, 
+	   j = list(min = min(seconds), 
+	   		    max = max(seconds)), 
+	   by = file]
 ```
 
 ```
@@ -444,30 +460,37 @@ datAll[i = TRUE, j = list(min = min(seconds), max = max(seconds)), by = file]
 Notice that after cleaning up the code I ended up with something that seems a little verbose:
 
 ```r
-datAll[i = TRUE, j = list(min = min(seconds), max = max(seconds)), by = file]
+datAll[i = TRUE, 
+	   j = list(min = min(seconds), 
+	   		    max = max(seconds)), 
+	   by = file]
 ```
 
 
 To make a nice table the old way it takes several steps.  I would argue that the data.table solution is much more readable than either of these (and it's definitely much faster):
 
 ```r
-## NOT EVALUATED (also has no column names)
-do.call(rbind, with(datAll, tapply(seconds, file, range)))
-```
-
-
-```r
-## NOT EVALUATED (also has no column names)
-aggregate(datAll$seconds, by = list(file = datAll$file), function(x) c(min(x), 
-    max(x)))
+## NOT EVALUATED
+## (also has no column names)
+do.call(rbind, 
+		with(datAll, tapply(seconds,file,range)))
 ```
 
 
 ```r
 ## NOT EVALUATED
-data.frame(file = aggregate(datAll$file, by = list(file = datAll$file), "[", 
-    1)$x, min = aggregate(datAll$seconds, by = list(file = datAll$file), min)$x, 
-    max = aggregate(datAll$seconds, by = list(file = datAll$file), max)$x, stringsAsFactors = FALSE)
+## (also has no column names)
+aggregate(datAll$seconds, by=list(file=datAll$file), function(x)c(min(x),max(x)))
+```
+
+
+```r
+## NOT EVALUATED
+data.frame(
+	file =aggregate(datAll$file, by=list(file=datAll$file), '[', 1)$x,
+	min = aggregate(datAll$seconds, by=list(file=datAll$file), min)$x,
+	max = aggregate(datAll$seconds, by=list(file=datAll$file), max)$x,
+	stringsAsFactors=FALSE)
 ```
 
 
@@ -483,53 +506,53 @@ Also, I know that the pressure sensor was pressed more than once!!
 
 
 ```r
-plot(datAll$sens0, main = "pressure sensor tab (pressed randomly)")
+plot(datAll$sens0, main='pressure sensor tab (pressed randomly)')
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-131.png) 
+![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-141.png) 
 
 ```r
-plot(datAll$sens1, main = "light sensor (means fridge is open)")
+plot(datAll$sens1, main='light sensor (means fridge is open)')
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-132.png) 
+![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-142.png) 
 
 ```r
-plot(datAll$sens2/10 * 9/5 + 32, main = "fridge sensor")
+plot(datAll$sens2/10*9/5+32, main='fridge sensor')
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-133.png) 
+![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-143.png) 
 
 ```r
-plot(datAll$sens3/10 * 9/5 + 32, main = "external sensor (not a calibrated sensor)")
+plot(datAll$sens3/10*9/5+32, main='external sensor (not a calibrated sensor)')
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-134.png) 
+![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-144.png) 
 
 ```r
-plot(datAll$sens4/10 * 9/5 + 32, main = "freezer sensor")
+plot(datAll$sens4/10*9/5+32, main='freezer sensor')
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-135.png) 
+![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-145.png) 
 
 ```r
 
-boxplot(sens2 ~ file, datAll)
+boxplot(sens2~file, datAll)
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-136.png) 
+![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-146.png) 
 
 ```r
-boxplot(sens3 ~ file, datAll)
+boxplot(sens3~file, datAll)
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-137.png) 
+![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-147.png) 
 
 ```r
-boxplot(sens4 ~ file, datAll)
+boxplot(sens4~file, datAll)
 ```
 
-![plot of chunk unnamed-chunk-13](figure/unnamed-chunk-138.png) 
+![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-148.png) 
 
 
 

@@ -21,13 +21,18 @@ Original meetup example: http://chicagodatascience.com/public/26th_and_Californi
 
 ## INITIALIZE
 
+
+```r
+opts_chunk$set(tidy = FALSE)
+```
+
+
+
 ```r
 ## The following line is needed to compile to HTML, please ignore
-if (basename(getwd()) != "data.table_demo") {
-    setwd("..")
-}
+if (basename(getwd()) != "data.table_demo") {setwd("..")}
 
-rm(list = ls())
+rm(list=ls())
 library(data.table)
 library(ggplot2)
 source("functions/ExtractIsoTime.R")
@@ -44,13 +49,13 @@ This csv contains raw data collected from the Cook Count Sherrif's website.  It 
 
 ```r
 ## The following line is needed to compile to HTML, please ignore
-if (basename(getwd()) != "data.table_demo") {
-    setwd("..")
-}
+if (basename(getwd()) != "data.table_demo") {setwd("..")}
 
-rawdat = read.table(file = "data/Database 2013-01-21 (8zQ4cW7T).csv", sep = ",", 
-    quote = "\"", flush = FALSE, header = TRUE, nrows = -1, fill = FALSE, stringsAsFactors = FALSE, 
-    na.strings = c("None", ""))
+rawdat = read.table(file = 'data/Database 2013-01-21 (8zQ4cW7T).csv', 
+					sep=',', quote='"', flush=FALSE, 
+					header=TRUE, nrows=-1, fill=FALSE, 
+					stringsAsFactors=FALSE,
+					na.strings=c('None', ''))
 
 str(rawdat)
 ```
@@ -99,7 +104,7 @@ This relies on a simple function I wrote called `ExtractIsoTime` (which is in th
 
 ```r
 ## EXAMPLE FORMAT: 2012-12-30T20:57:19.616186
-dat[, `:=`(booking_date, ExtractIsoTime(dat$booking_date))]
+dat[ , booking_date := ExtractIsoTime(dat$booking_date)]
 ```
 
 ```
@@ -142,7 +147,7 @@ dat[, `:=`(booking_date, ExtractIsoTime(dat$booking_date))]
 ```
 
 ```r
-dat[, `:=`(discharge_date_earliest, ExtractIsoTime(dat$discharge_date_earliest))]
+dat[ , discharge_date_earliest := ExtractIsoTime(dat$discharge_date_earliest)]
 ```
 
 ```
@@ -215,7 +220,8 @@ NAsummary(dat)
 ```r
 
 
-## Summary by bail amount the old way: (Don't forget the useNA argument!!)
+## Summary by bail amount the old way:
+## (Don't forget the useNA argument!!)
 table(dat$bail_amount)
 ```
 
@@ -252,7 +258,7 @@ table(dat$bail_amount)
 ```
 
 ```r
-table(dat$bail_amount, useNA = "ifany")  # almost forgot
+table(dat$bail_amount, useNA='ifany') # almost forgot
 ```
 
 ```
@@ -290,7 +296,7 @@ table(dat$bail_amount, useNA = "ifany")  # almost forgot
 ```r
 
 ## Summary by bail amount Data Table
-dat[, .N, by = bail_amount]
+dat[ , .N, by = bail_amount]
 ```
 
 ```
@@ -309,7 +315,7 @@ dat[, .N, by = bail_amount]
 ```
 
 ```r
-dat[, .N, keyby = bail_amount]
+dat[ , .N, keyby = bail_amount]
 ```
 
 ```
@@ -330,7 +336,7 @@ dat[, .N, keyby = bail_amount]
 ```r
 
 ## Summary by race
-dat[, .N, by = race]
+dat[ , .N, by=race]
 ```
 
 ```
@@ -355,7 +361,7 @@ This is probably the most confusing thing at first
 
 ```r
 ## WRONG WAY:
-dat[, 3]
+dat[ , 3]
 ```
 
 ```
@@ -363,7 +369,7 @@ dat[, 3]
 ```
 
 ```r
-dat[, "race"]
+dat[ , 'race']
 ```
 
 ```
@@ -373,7 +379,7 @@ dat[, "race"]
 ```r
 
 ## RIGHT WAY:
-dat[1:10, race]
+dat[1:10 , race] 
 ```
 
 ```
@@ -381,7 +387,7 @@ dat[1:10, race]
 ```
 
 ```r
-dat[1:10, 3, with = F]
+dat[1:10 , 3, with = F]
 ```
 
 ```
@@ -401,7 +407,7 @@ dat[1:10, 3, with = F]
 ```r
 
 
-## Indexing works differently
+## Indexing works differently 
 dat[1]
 ```
 
@@ -419,7 +425,7 @@ dat[1]
 ## DF:
 df = as.data.frame(dat)
 # df[1]
-df[1, ]
+df[1,]
 ```
 
 ```
@@ -444,7 +450,7 @@ This is very fast, and very useful for generating any kind of summary statistics
 ```r
 
 ## Grouping is simple
-dat[, mean(age_at_booking), by = race]
+dat[ , mean(age_at_booking), by=race]
 ```
 
 ```
@@ -461,7 +467,8 @@ dat[, mean(age_at_booking), by = race]
 ```
 
 ```r
-dat[, age_at_booking, by = race]
+
+dat[ , age_at_booking, by=race]
 ```
 
 ```
@@ -480,8 +487,11 @@ dat[, age_at_booking, by = race]
 ```
 
 ```r
-dat[i = TRUE, j = list(mean = mean(age_at_booking), sd = sd(age_at_booking)), 
-    by = race]
+
+dat[i = TRUE, 
+	j = list(mean = mean(age_at_booking),
+			 sd = sd(age_at_booking)), 
+	by = race]
 ```
 
 ```
@@ -506,8 +516,11 @@ Sometimes things happen that you may not expect. It's good, but possibly a surpr
 
 
 ```r
-dat[i = TRUE, j = list(mean = mean(age_at_booking), sd = sd(age_at_booking), 
-    age_at_booking), by = race]
+dat[i = TRUE, 
+	j = list(mean = mean(age_at_booking),
+			 sd = sd(age_at_booking),
+			 age_at_booking), 
+	by = race]
 ```
 
 ```
@@ -530,20 +543,17 @@ dat[i = TRUE, j = list(mean = mean(age_at_booking), sd = sd(age_at_booking),
 
 
 ```r
-mysummary = dat[
-	i = !is.na(charges) &
-		!is.na(booking_date) &
-		!is.na(bail_amount),
-	j = list(
-		count = .N,
-		coverage = diff(range(booking_date)),
-		bailave = mean(bail_amount),
-		bailsd = sd(bail_amount),
-		bailmin = min(bail_amount),
-		bailmax = max(bail_amount)
-		),
-	by = list(race,gender,age_at_booking)
-	]
+mysummary = dat[i = !is.na(charges) &
+					!is.na(booking_date) &
+					!is.na(bail_amount),
+				j = list(count = .N,
+						 coverage = diff(range(booking_date)),
+						 bailave = mean(bail_amount),
+						 bailsd = sd(bail_amount),
+						 bailmin = min(bail_amount),
+						 bailmax = max(bail_amount)),
+				by = list(race,gender,
+						  age_at_booking)]
 mysummary
 ```
 
@@ -589,7 +599,7 @@ mysummary
 <br>
 
 ```r
-datSmall = dat[, list(race, gender, charges_citation, housing_location)]
+datSmall = dat[,list(race, gender, charges_citation, housing_location)]
 ```
 
 
@@ -605,7 +615,7 @@ Personally, I rarely used these functions at first.  I found it easier to give u
 ```r
 
 ## Count of observations by race
-datSmall[, .N, by = race]
+datSmall[ , .N, by=race]
 ```
 
 ```
@@ -623,11 +633,11 @@ datSmall[, .N, by = race]
 
 ```r
 
-## Set the key to be 'race'', and do some joins
+## Set the key to be "race"", and do some joins
 setkey(datSmall, "race")
 
 ## Simple inner Join, new syntax (and what I normally use)
-datSmall["W"]
+datSmall['W']
 ```
 
 ```
@@ -681,7 +691,7 @@ datSmall["W"]
 
 ```r
 ## Simple inner Join, old syntax
-datSmall[J("W")]
+datSmall[J('W')]
 ```
 
 ```
@@ -735,7 +745,7 @@ datSmall[J("W")]
 
 ```r
 ## You can select more than one key
-datSmall[J(c("W", "WH"))]
+datSmall[J(c('W', 'WH'))]
 ```
 
 ```
@@ -754,8 +764,8 @@ datSmall[J(c("W", "WH"))]
 ```
 
 ```r
-## This still works
-datSmall[c("W", "WH")]
+##   This still works
+datSmall[c('W', 'WH')]
 ```
 
 ```
@@ -786,7 +796,7 @@ Let's get records where race == "WH" and gender == "M"
 There should be 1682 records of that sort based on this table:
 
 ```r
-datSmall[, .N, keyby = list(race, gender)]
+datSmall[,.N,keyby=list(race, gender)]
 ```
 
 ```
@@ -816,9 +826,9 @@ datSmall[, .N, keyby = list(race, gender)]
 
 
 ```r
-## This is the first way that I would have guessed to get results for
-## 'white' and 'male', but it doesn't work:
-datSmall[c("WH", "M")]
+## This is the first way that I would have guessed to 
+## get results for "white" and "male", but it doesn't work:
+datSmall[c('WH', 'M')]
 ```
 
 ```
@@ -837,9 +847,9 @@ datSmall[c("WH", "M")]
 ```
 
 ```r
-## If I add the summary using .N, you can see that it also selects Females
-## (and returns 1 NA):
-datSmall[c("WH", "M")][, .N, list(race, gender)]
+## If I add the summary using .N, you can see that 
+## it also selects Females (and returns 1 NA):
+datSmall[c('WH', 'M')][,.N,list(race,gender)]
 ```
 
 ```
@@ -852,7 +862,7 @@ datSmall[c("WH", "M")][, .N, list(race, gender)]
 ```r
 
 ## This one works.
-datSmall[data.table("WH", "M")]
+datSmall[data.table('WH', 'M')]
 ```
 
 ```
@@ -871,7 +881,7 @@ datSmall[data.table("WH", "M")]
 ```
 
 ```r
-datSmall[data.table("WH", "M")][, .N, list(race, gender)]
+datSmall[data.table('WH', 'M')][,.N,list(race,gender)]
 ```
 
 ```
@@ -881,20 +891,21 @@ datSmall[data.table("WH", "M")][, .N, list(race, gender)]
 
 ```r
 
-## But it's a little sloppy because you're actually making this data
-## table, and then joining it with the master data:
-data.table("WH", "M")
+## But it's a little sloppy because you're actually
+## making this data table, and then 
+## joining it with the master data:
+data.table('WH', 'M')
 ```
 
 ```
-##    WH M
-## 1: WH M
+##    V1 V2
+## 1: WH  M
 ```
 
 ```r
 
 ## This is the right way to do it.
-datSmall[J("WH", "M")]
+datSmall[J('WH', 'M')]
 ```
 
 ```
@@ -913,7 +924,7 @@ datSmall[J("WH", "M")]
 ```
 
 ```r
-datSmall[CJ("WH", "M")]
+datSmall[CJ('WH', 'M')]
 ```
 
 ```
@@ -934,7 +945,7 @@ datSmall[CJ("WH", "M")]
 ```r
 
 ## Notice that with two keys this no longer works:
-datSmall[J("WH", "W")]
+datSmall[J('WH', 'W')]
 ```
 
 ```
@@ -944,7 +955,7 @@ datSmall[J("WH", "W")]
 
 ```r
 ## Notice that with two keys, but this does:
-datSmall[J(c("WH", "W"))]
+datSmall[J(c('WH', 'W'))]
 ```
 
 ```
